@@ -1,0 +1,1 @@
+{"name":"Guess the Player","short_name":"Guess","description":"Name the football player from five clues.","start_url":"./","display":"standalone","background_color":"#eef2ea","theme_color":"#587a5c","icons":[{"src":"icon-192.png","sizes":"192x192","type":"image/png","purpose":"any maskable"},{"src":"icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}]}
