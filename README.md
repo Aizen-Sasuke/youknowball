@@ -1,38 +1,41 @@
-# YouKnowBall
+# Guess the Player
 
-Football player guessing game. Five clues per round, plus Wordle-style hints, a 3x3 grid challenge, and online rooms.
+A football quiz you can play with friends. Each round shows five clues about a player, in a random order. The fewer clues you need, the more you score.
 
 ## Modes
 
-- **Classic**: pass the phone around, with optional timer, teams, and a letter-hint lifeline.
+- **Classic**: pass the phone around, with an optional turn timer, teams, and a letter-hint lifeline.
 - **Career path**: clubs unlock one at a time.
-- **Daily**: the same five players for everyone each day, with a shareable grid and a previous-days archive.
-- **Wordle**: find the mystery player in six tries. Each guess colors league, nation, position, club, and birth year.
-- **Grid**: fill a 3x3 board by naming players who fit a club row and a nation column. Three strikes ends the game.
-- **Solo**: 10 rounds, 20 rounds, or endless with three strikes. Beat your personal best.
-- **Online**: host a room, share the 6-letter code or invite link, and race friends on their phones.
+- **Daily**: the same five players for everyone each day, with a shareable result grid.
+- **Online**: host a room, share the 4-letter code (or an invite link), and race friends on their own phones.
 
-Pools: everyone, current stars, legends, or a league (Premier League, La Liga, Serie A, Bundesliga, Ligue 1).
+118 players, difficulty tiers with bonus points, streaks, stats saved on your device, sage light and dark themes, and a stadium intro.
 
 ## Run it
 
-Static site, no build step. Open `index.html`, or run `npx serve .`
+It is a static site with no build step. Open `index.html` in a browser, or serve the folder:
+
+```
+npx serve .
+```
 
 ## Deploy on Vercel
 
 1. Push this folder to a GitHub repository.
-2. In Vercel, import the repository, set the framework preset to Other, and leave the build command empty.
-3. Deploy. Online rooms work once the site is served over HTTPS.
+2. In Vercel, choose Add New, then Project, and import the repository.
+3. Set the framework preset to Other and leave the build command empty.
+4. Deploy. Online rooms work as soon as the site is live over HTTPS.
 
-## Online play
+Or from this folder: `npx vercel --prod`.
 
-Rooms use PeerJS (WebRTC) with its public signaling server. The host's browser runs the game. Rooms cap at 8 players and lock once the game starts. Strict networks may need a TURN relay, set in `config.js`.
+## How online play works
+
+Online rooms use [PeerJS](https://peerjs.com/) (WebRTC) with its free public signaling server. The host's browser runs the game and everyone else connects to it, so there is no backend to run.
+
+Some strict networks block direct connections. If a friend cannot join, add a TURN relay in `config.js`.
 
 ## Notes
 
-- Player facts and league tags were written from memory and may contain mistakes. Check the `RAW`, `SPR`, and `LG` data at the top of `index.html` before wide release.
-- Add a `LICENSE` file before making the repository public.
-
-## Adding players
-
-`tools/wikidata_players.py` pulls candidate footballers from Wikidata's open API (CC0 licence). Review the output before adding it to the `RAW` block in `index.html`.
+- Player facts are written from memory and may contain mistakes. Open an issue or edit the data at the top of the script in `index.html` (the `RAW` and `SPR` blocks).
+- Add a `LICENSE` file before sharing the repository publicly.
+- For a link preview image, add an `og:image` meta tag with the absolute URL of an image on your domain.
