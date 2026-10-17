@@ -23,13 +23,30 @@ function pulse(cls){
   c.classList.remove(cls);void c.offsetWidth;c.classList.add(cls);
 }
 
-/* FLIP: swap a list's markup, then glide keyed children from their old position. */
+/* Tween a number in the DOM from el.dataset.from to el.dataset.to (640→560ms cubic ease).
+   Reused by post() for score pops and by flipList() for the live online scoreboard. */
+function tweenNum(el){
+  const to=+el.dataset.to,fr=+(el.dataset.from||0);
+  if(!isFinite(to)||!isFinite(fr)||to===fr||typeof requestAnimationFrame!=="function"||RMQ.matches)return;
+  el.textContent=fr;el.classList.add("pop");
+  const t0=performance.now();
+  (function f(t){const k=Math.min(1,(t-t0)/560);el.textContent=Math.round(fr+(to-fr)*(1-Math.pow(1-k,3)));if(k<1)requestAnimationFrame(f)})(t0);
+}
+
+/* FLIP: swap a list's markup, then glide keyed children from their old position.
+   Skips the rebuild entirely when the markup is unchanged (e.g. online hostTick),
+   and tweens any <b data-to> whose previous keyed value differs. */
 function flipList(box,html){
-  const first={};
-  [...box.children].forEach(k=>{if(k.dataset.k)first[k.dataset.k]=k.getBoundingClientRect()});
+  const first={},was={};
+  [...box.children].forEach(k=>{if(!k.dataset.k)return;first[k.dataset.k]=k.getBoundingClientRect();const b=k.querySelector("b");if(b)was[k.dataset.k]=+b.textContent});
+  if(box.dataset.fk===html)return;
+  box.dataset.fk=html;
   box.innerHTML=html;
   if(RMQ.matches)return;
   [...box.children].forEach(k=>{
+    if(k.dataset.k&&was[k.dataset.k]!=null&&!isNaN(was[k.dataset.k])){
+      const b=k.querySelector("b[data-to]");if(b){b.dataset.from=was[k.dataset.k];tweenNum(b)}
+    }
     const f=first[k.dataset.k];if(!f)return;
     const l=k.getBoundingClientRect(),dx=f.left-l.left,dy=f.top-l.top;
     if(!dx&&!dy)return;
