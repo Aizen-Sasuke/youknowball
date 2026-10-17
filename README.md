@@ -1,4 +1,4 @@
-# Guess the Player
+# YouKnowBall
 
 A football quiz you can play with friends. Each round shows five clues about a player, in a random order. The fewer clues you need, the more you score.
 
