@@ -25,11 +25,11 @@
 - Reduced motion on: state changes still visible, nothing slides.
 
 ## Flags (not fixed silently)
-- Dark is now the default; theme toggle no longer follows the OS (one line in the `#tg` handler).
-- Confetti is hidden with CSS (decorative, longer than 600ms). `confetti()` still runs.
+- Dark is now the default; the toggle no longer follows the OS, but the choice IS persisted since v12.1 (`cfg.light` in localStorage). First visit = dark regardless of OS setting (documented trade-off; one line can restore OS detection).
+- Confetti: decorative fall is intentionally hidden by CSS (`.cf{display:none}`); since v12.1 `confetti()` early-returns so it no longer builds 36 DOM nodes on every solve.
 - Online "last 5 seconds" orange now uses 5 (was 3) and ignores the reveal countdown.
 - Old `.row` animation re-fired every second in the online scoreboard; disabled there.
-- `hostTick` re-renders `#obd` each second, so online score numbers do not tween.
+- Since v12.1 `flipList` skips the rebuild when the markup is identical (hostTick's once-per-second tick no longer churns `#obd`), and score numbers in it tween via `tweenNum` (`data-to`/`data-from` with the previous DOM value).
 - No separate "Reveal" action exists in JS: Skip to next clue = reveal next; Give up = reveal answer.
-- Fragile: markup is string-built in many places, so a missing ID throws silently in handlers; `post()` styles `#app`'s first child; `cp()` swallows clipboard errors; Wordle/Grid errors write to `#er` outside any redraw; PeerJS 6s host timeout paths use `alert` in gridStart.
+- Since v12.1: `setErr(id,msg)` writes through to a toast when the error element is missing instead of throwing; `cp()` falls back to a hidden execCommand copy on non-secure origins and restores its label; a guard in `start()`/`hostStart()` shows an error instead of crashing when a pool filter yields zero players.
 - Small additive JS (display only): `S.nk`, `S.sk` for fresh-clue and streak-tab detection, share grid in end screen and copied text, `fit()`, `flipList()`, `pulse()`.

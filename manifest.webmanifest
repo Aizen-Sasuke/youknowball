@@ -2,6 +2,8 @@
  "name": "YouKnowBall",
  "short_name": "YouKnowBall",
  "description": "Name the football player. Clues, Wordle-style hints, grids, and online rooms.",
+ "id": "./",
+ "scope": "./",
  "start_url": "./",
  "display": "standalone",
  "background_color": "#07130d",

@@ -5,9 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>YouKnowBall</title>
 <meta name="description" content="Name the football player from five clues. Race friends online, play the daily, or pass the phone.">
-<meta name="theme-color" content="#07130d" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#07130d" media="(prefers-color-scheme: dark)">
-<meta property="og:title" content="YouKnowBall"><meta property="og:description" content="Five clues. The fewer you need, the more you score."><meta property="og:type" content="website"><meta name="twitter:card" content="summary">
-<meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="YouKnowBall">
+<meta name="theme-color" content="#f3eedd" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#07130d" media="(prefers-color-scheme: dark)">
+<meta property="og:title" content="YouKnowBall"><meta property="og:description" content="Five clues. The fewer you need, the more you score."><meta property="og:type" content="website">
+<meta property="og:image" content="https://aizen-sasuke.github.io/youknowball/icon-512.png"><meta property="og:image:alt" content="YouKnowBall icon">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="https://aizen-sasuke.github.io/youknowball/icon-512.png">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="YouKnowBall">
 <link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:wght@400;500;600;700&display=swap">
@@ -18,7 +20,7 @@
 <div class="stage"><svg viewBox="0 0 400 250" fill="none" stroke="#f4f1e6" stroke-width="2"><rect pathLength="1" x="8" y="8" width="384" height="234"/><path pathLength="1" d="M8 125H392" style="animation-delay:.2s"/><circle pathLength="1" cx="200" cy="125" r="34" style="animation-delay:.3s"/><rect pathLength="1" x="112" y="8" width="176" height="52" style="animation-delay:.4s"/><rect pathLength="1" x="112" y="190" width="176" height="52" style="animation-delay:.4s"/></svg><div class="ball"></div><div class="ripple"></div></div>
 <h2 id="it"></h2><p id="ik"></p><span class="skip">Tap to skip</span></div>
 <div class="w">
-<div class="top"><span class="sys">Matchday</span><button class="tg" id="tg" type="button">Switch theme</button></div>
+<div class="top"><span class="sys">Matchday</span><button class="tg" id="tg" type="button" aria-pressed="false">Switch theme</button></div>
 <header class="hero"><p class="eyebrow">Football quiz &middot; five clues</p><h1 data-fit>YouKnowBall</h1><p class="tag">Five clues. The fewer you need, the more you score.</p></header>
 <details class="how"><summary>How to play</summary><p>Each round gives you five clues about a footballer, in a random order. Guess early to score more: 5 points on the first clue, down to 1 on the last. Harder players add bonus points, and a wrong guess can cost 1. Play together on one phone, take on today's Daily, or race friends online with a room code.</p></details>
 <main id="app"></main>

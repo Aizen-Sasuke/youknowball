@@ -5,11 +5,14 @@ A football quiz you can play with friends. Each round shows five clues about a p
 ## Modes
 
 - **Classic**: pass the phone around, with an optional turn timer, teams, and a letter-hint lifeline.
-- **Career path**: clubs unlock one at a time.
+- **Solo**: you against the clock, one run, three strikes, personal best.
+- **Wordle**: six tries, colour hints for league, nation, position, club and birth year.
+- **Grid**: fill a 3×3 board where a club row meets a nation column.
+- **Career path**: clubs unlock one at a time, initials last.
 - **Daily**: the same five players for everyone each day, with a shareable result grid.
-- **Online**: host a room, share the 4-letter code (or an invite link), and race friends on their own phones.
+- **Online**: host a room, share the 4-to-6 character code (or an invite link), and race friends on their own phones.
 
-118 players, difficulty tiers with bonus points, streaks, stats saved on your device, sage light and dark themes, and a stadium intro.
+**279 players** (162 current stars, 117 legends), difficulty tiers with bonus points, streaks, stats saved on your device, sage light and dark themes, a stadium intro, and an offline-capable PWA shell.
 
 ## Run it
 
@@ -28,6 +31,10 @@ npx serve .
 
 Or from this folder: `npx vercel --prod`.
 
+## Offline / PWA
+
+The site registers a small service worker (`sw.js`): the app shell (HTML, CSS, JS, icons, manifest) is precached, and Google Fonts plus the PeerJS CDN are cached at runtime. After one online visit the game loads offline. Online rooms still need a live connection, obviously.
+
 ## How online play works
 
 Online rooms use [PeerJS](https://peerjs.com/) (WebRTC) with its free public signaling server. The host's browser runs the game and everyone else connects to it, so there is no backend to run.
@@ -36,13 +43,14 @@ Some strict networks block direct connections. If a friend cannot join, add a TU
 
 ## Notes
 
-- Player facts are written from memory and may contain mistakes. Open an issue or edit the data in `js/data.js` (the `RAW`, `SPR` and `LG` blocks).
-- Add a `LICENSE` file before sharing the repository publicly.
-- For a link preview image, add an `og:image` meta tag with the absolute URL of an image on your domain.
+- Player facts are written from memory and may contain mistakes. Open an issue or edit the data in `js/data.js` (the `RAW`, `SPR` and `LG` blocks). Verified as of the v12.1 audit: 279 rows, no duplicate names, every player has a league tag, all 32 special-clue entries resolve to real players. The Ligue 1 pool is thin (8 players) — contributions welcome.
+- Licensed under the MIT license (`LICENSE`).
+- Link preview uses an `og:image` meta tag pointing at the GitHub Pages icon URL; if you host elsewhere, update that absolute URL (social crawlers need it).
 
-## Structure (v12)
+## Structure
 
-- `index.html`: markup shell
-- `css/main.css`: the whole visual layer (Matchday Lower-Third)
-- `js/data.js`: player data. `js/fx.js`: presentation helpers (fit, FLIP, pulse). `js/app.js`: game logic and screens
+- `index.html`: markup shell · `manifest.webmanifest` + icons: installable app
+- `sw.js`: offline service worker · `404.html`: friendly 404 (Pages + Vercel)
+- `css/main.css`: the whole visual layer (Matchday Lower-Third) · `css/legacy.css`: legacy styles, currently unreferenced
+- `js/data.js`: player data · `js/fx.js`: presentation helpers (fit, FLIP, pulse, tween) · `js/app.js`: game logic and screens
 - See `REDESIGN.md` for changelog, test checklist and fragile-code notes.
