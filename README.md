@@ -36,6 +36,13 @@ Some strict networks block direct connections. If a friend cannot join, add a TU
 
 ## Notes
 
-- Player facts are written from memory and may contain mistakes. Open an issue or edit the data at the top of the script in `index.html` (the `RAW` and `SPR` blocks).
+- Player facts are written from memory and may contain mistakes. Open an issue or edit the data in `js/data.js` (the `RAW`, `SPR` and `LG` blocks).
 - Add a `LICENSE` file before sharing the repository publicly.
 - For a link preview image, add an `og:image` meta tag with the absolute URL of an image on your domain.
+
+## Structure (v12)
+
+- `index.html`: markup shell
+- `css/main.css`: the whole visual layer (Matchday Lower-Third)
+- `js/data.js`: player data. `js/fx.js`: presentation helpers (fit, FLIP, pulse). `js/app.js`: game logic and screens
+- See `REDESIGN.md` for changelog, test checklist and fragile-code notes.

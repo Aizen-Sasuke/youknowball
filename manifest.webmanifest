@@ -4,8 +4,8 @@
  "description": "Name the football player. Clues, Wordle-style hints, grids, and online rooms.",
  "start_url": "./",
  "display": "standalone",
- "background_color": "#eef2ea",
- "theme_color": "#587a5c",
+ "background_color": "#07130d",
+ "theme_color": "#0c2217",
  "icons": [
   {
    "src": "icon-192.png",
