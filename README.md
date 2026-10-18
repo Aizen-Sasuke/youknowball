@@ -43,7 +43,7 @@ Some strict networks block direct connections. If a friend cannot join, add a TU
 
 ## Notes
 
-- Player facts are written from memory and may contain mistakes. Open an issue or edit the data in `js/data.js` (the `RAW`, `SPR` and `LG` blocks). Verified as of the v12.1 audit: 279 rows, no duplicate names, every player has a league tag, all 32 special-clue entries resolve to real players. The Ligue 1 pool is thin (8 players) — contributions welcome.
+- Player facts are written from memory and may contain mistakes. Open an issue or edit the data in `js/data.js` (the `RAW`, `SPR` and `LG` blocks). Recomputed by `node tools/data-audit.js` (parses the three blocks directly): 279 rows, no duplicate names, league tags cover all 279 players — spread PL 121, LL 69, SA 46, BL 21, L1 14, OT 8 — and all 32 special-clue entries resolve to real players. The thinnest pool is **OT** ("other", 8 players, all of them legends) — contributions welcome there.
 - Licensed under the MIT license (`LICENSE`).
 - Link preview uses an `og:image` meta tag pointing at the GitHub Pages icon URL; if you host elsewhere, update that absolute URL (social crawlers need it).
 
@@ -51,6 +51,6 @@ Some strict networks block direct connections. If a friend cannot join, add a TU
 
 - `index.html`: markup shell · `manifest.webmanifest` + icons: installable app
 - `sw.js`: offline service worker · `404.html`: friendly 404 (Pages + Vercel)
-- `css/main.css`: the whole visual layer (Matchday Lower-Third) · `css/legacy.css`: legacy styles, currently unreferenced
+- `css/main.css`: the whole visual layer (Matchday Lower-Third)
 - `js/data.js`: player data · `js/fx.js`: presentation helpers (fit, FLIP, pulse, tween) · `js/app.js`: game logic and screens
 - See `REDESIGN.md` for changelog, test checklist and fragile-code notes.
