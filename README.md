@@ -47,6 +47,8 @@ Some strict networks block direct connections. If a friend cannot join, add a TU
 
 ## Notes
 
+- Stats include a chalk **guess distribution**: how many rounds you solved at clue 1–5, per clue-based mode (Classic, Career path, Daily, Solo and Online). One increment per solved round — a replay of an already-played Daily never reaches play, so it cannot double count, and give-ups never count. The bars carry a text summary for screen readers. Counts live in the existing `ykbs` stats store (`ST.dist`), not a second one.
+
 - After every round reveal (Classic, Career path, Solo, Daily and Online) and on the Wordle result screen a compact **player card** shows the answer: nationality, position, birth year, league, clubs, tier (★ / ★★) and the fact line, plus a "Learn more" link to a Wikipedia search. It is built from the same fields the clues are built from, so it cannot disagree with the round. League codes are labelled from one shared map (`LGL`: PL → Premier League, LL → La Liga, SA → Serie A, BL → Bundesliga, L1 → Ligue 1, OT → Other) used by the card, the Wordle "League" column and every pool picker. The Wikipedia link is the only absolute URL in the app; all site assets stay relative.
 
 - Data integrity is gated in CI: `tools/validate-data.mjs` (dependency-free Node ESM) asserts the row count, uniqueness, league-tag coverage, league codes, special-clue resolution and tier values of `js/data.js`; `.github/workflows/validate.yml` runs it on every push and pull request. The shipped site stays zero-build. Run `node tools/validate-data.mjs` locally.

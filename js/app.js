@@ -166,7 +166,7 @@ draw()}
 function guess(skip){
 const p=S.deck[S.i],me=S.pl[S.t];let pn=false;
 if(!skip){const v=norm($("g").value);if(!v){setErr("er","Type a name first");$("g").focus();return}
-if(hit(v,p)){stopT();const q=pts(),b=S.last===S.t?1:0,tb=tier(p),tot=q+b+tb;me.s+=tot;S.last=S.t;S.run++;S.done=true;S.res.push(S.sh);S.msg=me.n+" scored "+tot+" ("+q+(b?", +1 streak":"")+(tb?", +"+tb+" "+TN[tb].toLowerCase()+" bonus":"")+")";S.err="";ST.solved++;const ms=Date.now()-S.t0;if(!ST.fast||ms<ST.fast)ST.fast=ms;ST.best=Math.max(ST.best,S.run);sv();beep(660,.15);setTimeout(()=>beep(990,.2),120);buzz(VIB.solve);confetti();S.fx="glow";draw();return}
+if(hit(v,p)){stopT();const q=pts(),b=S.last===S.t?1:0,tb=tier(p),tot=q+b+tb;me.s+=tot;S.last=S.t;S.run++;S.done=true;S.res.push(S.sh);S.msg=me.n+" scored "+tot+" ("+q+(b?", +1 streak":"")+(tb?", +"+tb+" "+TN[tb].toLowerCase()+" bonus":"")+")";S.err="";ST.solved++;bumpDist(S.mode,S.sh);const ms=Date.now()-S.t0;if(!ST.fast||ms<ST.fast)ST.fast=ms;ST.best=Math.max(ST.best,S.run);sv();beep(660,.15);setTimeout(()=>beep(990,.2),120);buzz(VIB.solve);confetti();S.fx="glow";draw();return}
 beep(180,.2,"square");buzz(VIB.bad);S.fx="shake";if(S.pen){me.s=Math.max(0,me.s-1);pn=true}}
 if(S.sh<5){S.sh++;S.t=(S.t+1)%S.pl.length;S.err=(skip?"Skipped. ":"Not quite"+(pn?", minus 1. ":". "))+"Clue "+S.sh+" goes to "+S.pl[S.t].n+"."}
 else{stopT();S.done=true;S.last=-1;S.run=0;S.res.push(0);S.msg="Nobody got that one";S.err="";if(S.solo)S.solo.miss++}
@@ -190,7 +190,7 @@ if(S.ph==="wd"){stopT();wordleRender();return}
 if(S.ph==="grid"){stopT();gridRender();return}
 stopT();
 if(S.ph==="st"){
-$("app").innerHTML='<div class="card narrow"><h3>Your stats on this device</h3><div class="stat"><div><b>'+ST.g+'</b><span>Games played</span></div><div><b>'+ST.solved+'</b><span>Players solved</span></div><div><b>'+ST.best+'</b><span>Best streak in a game</span></div><div><b>'+(ST.fast?(ST.fast/1000).toFixed(1)+"s":"None yet")+'</b><span>Fastest solve</span></div><div><b>'+streak()+'</b><span>Daily streak</span></div><div><b>'+Object.keys(ST.daily).length+'</b><span>Dailies played</span></div></div><button class="gh" id="bk" type="button">Back</button></div>';
+$("app").innerHTML='<div class="card narrow"><h3>Your stats on this device</h3><div class="stat"><div><b>'+ST.g+'</b><span>Games played</span></div><div><b>'+ST.solved+'</b><span>Players solved</span></div><div><b>'+ST.best+'</b><span>Best streak in a game</span></div><div><b>'+(ST.fast?(ST.fast/1000).toFixed(1)+"s":"None yet")+'</b><span>Fastest solve</span></div><div><b>'+streak()+'</b><span>Daily streak</span></div><div><b>'+Object.keys(ST.daily).length+'</b><span>Dailies played</span></div></div>'+distHtml()+'<button class="gh" id="bk" type="button">Back</button></div>';
 $("bk").onclick=()=>{S={ph:"setup"};enter=true;draw()};return}
 if(S.ph==="dd"||(S.ph==="end"&&S.mode==="d")){
 const k=S.dk||dkey(new Date()),d=ST.daily[k],t="YouKnowBall daily "+k+"\n"+d.g+"\nScore "+d.s+"\n"+location.origin+location.pathname+"?d="+k;
@@ -229,7 +229,7 @@ say(S.done?S.msg+". The answer was "+p.n:"Clue "+S.sh+". "+cs[S.sh-1]);
 if(S.done){$("nx").onclick=next}else{$("gb").onclick=()=>guess(false);$("sk").onclick=()=>guess(true);if($("hl"))$("hl").onclick=()=>{const k=left;S.hl=true;draw();left=k};$("g").onkeydown=e=>{setErr("er","");if(e.key==="Enter")guess(false)};$("g").focus({preventScroll:true});runT()}}
 $("tg").onclick=()=>{const r=document.documentElement,d=r.dataset.theme!=="light";r.dataset.theme=d?"light":"dark";cfg.light=d;save();$("tg").setAttribute("aria-pressed",String(d))};
 
-let RM=null,R=null,OL=null,HS=null;
+let RM=null,R=null,OL=null,HS=null,olCounted="";
 let RSRC="",invDone=false;
 function invGo(){if(!invOk||!RM||!$("jc")||invDone)return;invDone=true;$("jc").value=INV;if(cfg.on)setTimeout(()=>$("jn").click(),500);else $("on").focus()}
 function peerRoom(){const NS="ykbx-";return{join:(name,host)=>new Promise((res,rej)=>{
@@ -295,7 +295,7 @@ function hostNext(){HS.idx++;if(HS.idx>=HS.deck.length){HS.ph="end";return}const
 function hostTick(){if(!HS)return;if(HS.ph==="play"){HS.tl--;if(HS.tl<=0){if(HS.res)hostNext();else if(HS.sh<5){HS.sh++;HS.tl=HS.T}else{HS.res={n:HS.ans.n,nat:HS.ans.nat,ft:HS.ans.ft,by:"",pts:0};HS.tl=5}}}hostPub();olRender()}
 function hostStart(){const pool=P.filter(x=>inPool(x,cfg.pool));if(!pool.length){olStatus("That player pool has no players. Pick Everyone.");return}
  seed=cfg.rs?hs("kr"+cfg.rs):null;HS.deck=shuf(pool).slice(0,Math.min(HS.N,pool.length));seed=null;
- HS.N=HS.deck.length;HS.idx=-1;Object.values(HS.sc).forEach(x=>x.s=0);HS.ph="play";hostNext();hostPub();olRender();try{R.lock(true)}catch(e){}}
+ HS.N=HS.deck.length;HS.idx=-1;Object.values(HS.sc).forEach(x=>x.s=0);HS.ph="play";HS.at=Date.now();hostNext();hostPub();olRender();try{R.lock(true)}catch(e){}}
 function olRender(){
 if(!OL||!R||OL.gone)return;const s=OL.host?snap():OL.H;
 if(!s){olCard('<h3>Waiting for the host</h3><p class="who">Room '+esc(OL.code.toUpperCase())+'. If the host left, start a new room.</p><button class="gh" id="lv" type="button">Leave</button>');$("lv").onclick=olLeave;OL.sig="w";return}
@@ -319,7 +319,7 @@ $("orn").textContent=s.r+" of "+s.N;$("ow").textContent=s.w+(s.w===1?" point":" 
 const bar=$("otb");bar.style.width=Math.max(0,s.tl/(s.res?5:s.T)*100)+"%";bar.parentNode.classList.toggle("lo",!s.res&&s.tl<=5);$("ot").classList.toggle("lo",!s.res&&s.tl<=5);
 if(OL.nc!==s.cl.length){OL.nc=s.cl.length;say("Clue "+s.cl.length+". "+s.cl[s.cl.length-1]);$("ocl").innerHTML=oclHtml(s.cl,!!s.res);fit()}
 if(s.res&&!OL.rv){OL.rv=1;const rp=P.find(x=>x.n===s.res.n);say((s.res.by?s.res.by+" scored":"Nobody got it")+". The answer was "+s.res.n);$("ocl").innerHTML=oclHtml(s.cl,true);$("orv").innerHTML='<div class="rev'+(s.res.by?"":" miss")+'"><div class="rv-main"><small>'+(s.res.by?esc(s.res.by)+" scored "+s.res.pts:"Nobody got that one")+'</small><h2 data-fit>'+spl(s.res.n)+'</h2><p>'+esc(s.res.nat)+', '+esc(s.res.ft)+'</p></div><div class="pts">'+(s.res.by?'<span>+</span><b>'+s.res.pts+'</b>':'<b>0</b>')+'<em>pts</em></div></div>'+(rp?pcard(rp):"");fit();$("og").disabled=true;$("ogb").disabled=true}
-const f=s.fb[me()];if(f){const q=f.split(":");if(+q[0]===OL.k){$("ofb").textContent=q[1]==="1"?"Correct":"Not quite";if(q[1]==="1"&&!OL.cf){OL.cf=1;beep(660,.15);buzz(VIB.solve);confetti();pulse("glow")}else if(q[1]==="0"&&OL.fk!==q[0]){OL.fk=q[0];beep(180,.2,"square");buzz(VIB.bad);pulse("shake")}}}
+const f=s.fb[me()];if(f){const q=f.split(":");if(+q[0]===OL.k){$("ofb").textContent=q[1]==="1"?"Correct":"Not quite";if(q[1]==="1"&&!OL.cf){OL.cf=1;const ck=s.at+":"+s.r;if(olCounted!==ck){olCounted=ck;bumpDist("o",s.cl.length)}beep(660,.15);buzz(VIB.solve);confetti();pulse("glow")}else if(q[1]==="0"&&OL.fk!==q[0]){OL.fk=q[0];beep(180,.2,"square");buzz(VIB.bad);pulse("shake")}}}
 flipList($("obd"),s.sc.slice().sort((a,b)=>b[1]-a[1]).map(x=>'<div class="row" data-k="'+esc(String(x[2]))+'"><span>'+esc(x[0])+(x[2]===me()?" (you)":"")+'</span><b data-to="'+x[1]+'">'+x[1]+'</b></div>').join(""))}
 
 function setup(){setup0();if(cfg.mode==="d"){dailyCal();addArchive()}}
@@ -329,6 +329,17 @@ for(let d=1;d<=days;d++){const k=dkey(new Date(y,m,d)),pl=ST.daily[k],cls=d===to
   if(pl)cells+='<span class="cd ok'+cls+'" title="Played, '+pl.s+' pts">'+d+'</span>';else if(d<today)cells+='<span class="cd no'+cls+'">'+d+'</span>';else cells+='<span class="cd'+cls+'">'+d+'</span>'}
 const box=document.createElement("div");box.className="dcal";box.innerHTML='<h3 style="margin:26px 0 12px">'+now.toLocaleDateString(undefined,{month:"long",year:"numeric"})+'</h3><div class="cdh"><span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span></div><div class="cgrid">'+cells+'</div><p class="who">Daily streak: <b>'+streak()+'</b>. Green days are played.</p>';card.appendChild(box)}
 function streak(){const has=k=>!!(ST.daily[k]||(ST.wd&&ST.wd[k]));let d=new Date();if(!has(dkey(d)))d=new Date(Date.now()-864e5);let n=0;while(has(dkey(d))){n++;d=new Date(d-864e5)}return n}
+/* guess distribution: rounds solved at clue 1..5, per clue-based mode. One increment per solved
+   round (called once on the correct-guess path); a replay of a played Daily never reaches play,
+   so it cannot double count. Online counts your own correct round only. */
+const DMODES=[["c","Classic"],["p","Career path"],["d","Daily"],["s","Solo"],["o","Online"]];
+const distRow=m=>Array.isArray(ST.dist&&ST.dist[m])&&ST.dist[m].length===5?ST.dist[m]:[0,0,0,0,0];
+function bumpDist(m,sh){if(!DMODES.some(d=>d[0]===m))return;const a=(ST.dist=ST.dist||{})[m]||(ST.dist[m]=[0,0,0,0,0]);a[Math.min(5,Math.max(1,sh|0))-1]++;sv()}
+function distHtml(){
+ const rows=DMODES.map(d=>[d[1],distRow(d[0])]);
+ if(!rows.some(r=>r[1].some(n=>n)))return"";
+ const mx=Math.max(1,...rows.map(r=>Math.max(...r[1])));
+ return '<h3>Solved at clue</h3><div class="dist">'+rows.map(r=>'<div class="drow"><span class="dlab">'+r[0]+'</span><div class="dbars" role="img" aria-label="'+r[0]+" solved at "+r[1].map((n,i)=>"clue "+(i+1)+": "+n).join(", ")+'">'+r[1].map((n,i)=>'<span class="dbar"><em>'+ (i+1) +'</em><span class="dtrk"><i style="--w:'+(n?Math.max(8,Math.round(n/mx*100)):0)+'%"></i></span><b>'+n+'</b></span>').join("")+'</div></div>').join("")+'</div>'}
 function addArchive(){const card=$("app").querySelector(".card");if(!card)return;const box=document.createElement("div");box.className="arch";box.innerHTML='<h3 style="margin:18px 0 8px">Previous days</h3><div class="chips" id="ar" style="margin:0"></div>';card.appendChild(box);const w=$("ar");for(let i=1;i<=7;i++){const d=new Date(Date.now()-i*864e5),k=dkey(d),done=ST.daily[k];const b=document.createElement("button");b.type="button";b.className="gh";b.textContent=d.toLocaleDateString(undefined,{month:"short",day:"numeric"})+(done?" ✓":"");b.onclick=()=>start("d",k);w.appendChild(b)}}
 function wordleSetup(h){h+='<div class="step"><i>03</i>Kick off</div><div class="r"><button class="btn" id="go" type="button">Play today</button><button class="gh" id="rnd" type="button" style="flex:0 0 auto">Random puzzle</button></div><div class="arch" style="margin-top:6px"></div><div class="err" aria-live="polite" id="er"></div></div>';$("app").innerHTML=h;document.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{cfg.mode=b.dataset.m;save();enter=true;setup();post()});$("go").onclick=()=>start("w");$("rnd").onclick=()=>start("w",null,true);const w=$("app").querySelector(".arch");for(let i=1;i<=7;i++){const d=new Date(Date.now()-i*864e5),k=dkey(d),b=document.createElement("button");b.type="button";b.className="gh";b.style.cssText="padding:8px 12px;font-size:14px;margin:4px 6px 4px 0";b.textContent=d.toLocaleDateString(undefined,{month:"short",day:"numeric"})+(ST.wd&&ST.wd[k]?" ✓":"");b.onclick=()=>start("w",k);w.appendChild(b)}}
 let WS=null,GS=null;
