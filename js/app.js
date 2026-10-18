@@ -9,6 +9,12 @@ const TN=["Easy","Medium","Hard"];
    "League" column and every pool picker read from here, so labels can never drift. */
 const LGL={PL:"Premier League",LL:"La Liga",SA:"Serie A",BL:"Bundesliga",L1:"Ligue 1",OT:"Other"};
 const LGO=Object.entries(LGL);
+/* Filter pools beyond league/star/legend: a nation ("n:<name>") and a birth-decade era ("y:<decade>").
+   League codes stay bare so links made before these options existed still resolve. */
+const NATIONS=[...new Set(P.map(p=>p.nat))].sort((a,b)=>a.localeCompare(b)).map(n=>["n:"+n,n]);
+const ERAS=[...new Set(P.map(p=>Math.floor(+p.yr/10)*10))].filter(y=>y>=1900).sort((a,b)=>b-a).map(d=>["y:"+d,d+"s"]);
+const POOLNAME=v=>v==="x"?"Everyone":v==="0"?"Current stars":v==="1"?"Legends":v.indexOf("n:")===0?v.slice(2):v.indexOf("y:")===0?v.slice(2)+"s":(LGL[v]||v);
+const POOLSET=new Set(["x","0","1",...LGO.map(o=>o[0]),...NATIONS.map(o=>o[0]),...ERAS.map(o=>o[0])]);
 /* current club + "data refreshed" date come from the offline Wikidata refresh (js/data.js).
    CURTIDY is presentation only: Wikidata labels carry legal suffixes, and the stored value
    in CURRENT stays exactly as sourced. */
@@ -25,7 +31,11 @@ const TIERTXT=["Easy tier","Star tier","Legend tier"];
 const tier=p=>HARD.has(p.n)?2:EASY.has(p.n)?0:1;
 const DL='<datalist id="dl">'+P.map(p=>p.n).sort().map(n=>'<option value="'+n.replace(/"/g,"")+'">').join("")+'</datalist>';
 const lev=(a,b)=>{const m=[];for(let i=0;i<=a.length;i++)m[i]=[i];for(let j=1;j<=b.length;j++)m[0][j]=j;for(let i=1;i<=a.length;i++)for(let j=1;j<=b.length;j++)m[i][j]=Math.min(m[i-1][j]+1,m[i][j-1]+1,m[i-1][j-1]+(a[i-1]===b[j-1]?0:1));return m[a.length][b.length]};
-const inPool=(p,pl)=>pl==="x"||(pl==="0"||pl==="1"?String(p.r)===pl:p.lg===pl);
+/* filter pools: "x" everyone, "0"/"1" star pool, a bare league code, "n:<nation>" or "y:<decade>" */
+function inPool(p,pl){if(pl==="x")return true;if(pl==="0"||pl==="1")return String(p.r)===pl;
+ if(pl.indexOf("n:")===0)return p.nat===pl.slice(2);
+ if(pl.indexOf("y:")===0)return String(Math.floor(+p.yr/10)*10)===pl.slice(2);
+ return p.lg===pl}
 const allowedD=x=>x.length<=3?0:x.length<=5?1:2;
 const keysOf=p=>{if(p.k)return p.k;const s=new Set([norm(p.n),...p.a]);p.n.split(/[\s-]+/).map(norm).forEach(w=>{if(w.length>=3)s.add(w)});p.n.split(" ").map(norm).forEach(w=>{if(w.length>=3)s.add(w)});return p.k=[...s].filter(Boolean)};
 const bestK=(w,p)=>{let b=99;for(const x of keysOf(p)){const d=lev(w,x);if(d<=allowedD(x)&&d<b)b=d}return b};
@@ -67,7 +77,7 @@ if(SEEDOK&&MODEOK){CH={code:SEEDQ};cfg.mode=MODEQ;
   if(MODEQ==="s"){const j=+QP.get("j")||0;if([10,20,99].includes(j))cfg.sr=j}
   else{const r=+QP.get("r")||0;if([5,10,15,20,99].includes(r))cfg.R=r}
   const gd=QP.get("gd");if(MODEQ==="g"&&["e","m","h"].includes(gd))cfg.gd=gd;
-  const pl=QP.get("p");if(["x","0","1","PL","LL","SA","BL","L1"].includes(pl))cfg.pool=pl;
+  const pl=QP.get("p");if(pl&&POOLSET.has(pl))cfg.pool=pl;
   if(!cfg.names.length)cfg.names=["You"];save()}
 let S={ph:"setup"},iv=null,left=0,ax=null,enter=true;
 // Decorative confetti is intentionally not rendered (CSS keeps it hidden).
@@ -146,6 +156,17 @@ function cp(b,t){const bl=b.textContent,done=ok=>{b.textContent=ok?"Copied":"Cop
 const legacy=()=>{try{const ta=document.createElement("textarea");ta.className="sr";ta.value=t;document.body.appendChild(ta);ta.select();const ok=document.execCommand("copy");ta.remove();return ok}catch(e){return false}};
 try{navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(t).then(()=>done(true),()=>done(legacy())):done(legacy())}catch(e){done(legacy())}}
 function opt(id,l,v,c){return'<div><label class="lab" for="'+id+'">'+l+'</label><select id="'+id+'">'+v.map(o=>'<option value="'+o[0]+'"'+(String(o[0])===String(c)?" selected":"")+'>'+o[1]+'</option>').join("")+'</select></div>'}
+/* the "Players" picker: one native <select> with grouped league/nation/era options, so it stays
+   keyboard-reachable and uses the phone's own picker. A non-default filter shows a bar with the
+   match count and a Clear action (the guard for thin pools — never a crash or a silent short deck). */
+const poolOpt=k=>o=>'<option value="'+o[0]+'"'+(String(o[0])===String(k)?" selected":"")+'>'+o[1]+'</option>';
+function poolCtl(cur){return '<div><label class="lab" for="pl">Players</label><select id="pl">'
+ +[["x","Everyone"],["0","Current stars"],["1","Legends"]].map(poolOpt(cur)).join("")
+ +'<optgroup label="League">'+LGO.map(poolOpt(cur)).join("")+'</optgroup>'
+ +'<optgroup label="Nation">'+NATIONS.map(poolOpt(cur)).join("")+'</optgroup>'
+ +'<optgroup label="Era">'+ERAS.map(poolOpt(cur)).join("")+'</optgroup></select></div>'}
+function poolExtra(cur){if(cur==="x")return"";const n=P.filter(p=>inPool(p,cur)).length,thin=n<3;
+ return '<div class="poolbar'+(thin?" thin":"")+'" role="status"><span class="poollab">Filter: <b>'+esc(POOLNAME(cur))+'</b> · '+n+' player'+(n===1?"":"s")+(thin?" — short round set":"")+'</span><button class="gh" id="pclr" type="button">Clear filter</button></div>'}
 const MODES=[["c","Classic","Pass the phone","01"],["s","Solo","You against the clock","02"],["w","Wordle","Six tries, colour clues","03"],["g","Grid","3×3 club and nation","04"],["p","Career path","Clubs unlock one by one","05"],["d","Daily","Same five for everyone","06"],["o","Online","Race friends live","07"]];
 function setup0(){
 stopT();const m=cfg.mode;
@@ -154,7 +175,7 @@ if(m==="o"){olSetup(h);return}
 if(m==="s"){soloSetup(h);return}
 if(m==="w"){wordleSetup(h);return}
 if(m==="g"){gridSetup(h);return}
-if(m!=="d")h+='<h3>Who is playing</h3><div class="r"><input id="nm" placeholder="Add a name" maxlength="14" autocomplete="off"><button class="gh" id="ad" type="button" style="flex:0 0 auto">Add</button></div><div class="chips" id="ch"></div><div class="r">'+opt("rd","Rounds",[[5,"5"],[10,"10"],[15,"15"],[20,"20"],[99,"All"]],cfg.R)+opt("tm","Turn timer",[[0,"Off"],[15,"15 seconds"],[20,"20 seconds"],[30,"30 seconds"]],cfg.T)+opt("pl","Players",[["x","Everyone"],["0","Current stars"],["1","Legends"]].concat(LGO),cfg.pool)+'</div>';
+if(m!=="d")h+='<h3>Who is playing</h3><div class="r"><input id="nm" placeholder="Add a name" maxlength="14" autocomplete="off"><button class="gh" id="ad" type="button" style="flex:0 0 auto">Add</button></div><div class="chips" id="ch"></div><div class="r">'+opt("rd","Rounds",[[5,"5"],[10,"10"],[15,"15"],[20,"20"],[99,"All"]],cfg.R)+opt("tm","Turn timer",[[0,"Off"],[15,"15 seconds"],[20,"20 seconds"],[30,"30 seconds"]],cfg.T)+poolCtl(cfg.pool)+'</div>'+poolExtra(cfg.pool);
 h+='<div class="opts">'+(m!=="d"?[["teams","Teams, A vs B"],["pen","Wrong guess costs 1"],["ac","Easy mode, name hints"]]:[]).concat([["snd","Sound effects"],["hap","Vibration"]]).map(a=>'<label><input type="checkbox" id="o_'+a[0]+'"'+(cfg[a[0]]?" checked":"")+'>'+a[1]+'</label>').join("")+'</div><div class="err" aria-live="polite" id="er"></div><div class="step"><i>03</i>Kick off</div><div class="r"><button class="btn" id="go" type="button">'+(m==="d"?"Play today's challenge":"Kick off")+'</button><button class="gh" id="st" type="button" style="flex:0 0 auto">Stats</button></div></div>';
 $("app").innerHTML=h;
 document.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{cfg.mode=b.dataset.m;save();enter=true;setup();post()});
@@ -165,7 +186,7 @@ if(m!=="d"){chips();add=()=>{const v=$("nm").value.trim();if(!v)return;if(cfg.na
 $("go").onclick=()=>{if(m==="d"){start("d");return}const v=$("nm").value.trim();if(v)add();if(!cfg.names.length){setErr("er","Add at least one player");return}if(cfg.teams&&cfg.names.length<2){setErr("er","Teams need at least two players");return}cfg.R=+$("rd").value;cfg.T=+$("tm").value;cfg.pool=$("pl").value;save();start(m)}}
 function soloSetup(h){
 const sb=ST.sb||0,sg=ST.sg||0;
-h+='<div class="stat" style="margin-top:0"><div><b>'+sb+'</b><span>Personal best</span></div><div><b>'+sg+'</b><span>Solo runs</span></div></div><div class="r">'+opt("sr","Run length",[[10,"10 rounds"],[20,"20 rounds"],[99,"Endless, 3 strikes"]],cfg.sr||10)+opt("tm","Turn timer",[[0,"Off"],[15,"15 seconds"],[20,"20 seconds"],[30,"30 seconds"]],cfg.T)+opt("pl","Players",[["x","Everyone"],["0","Current stars"],["1","Legends"]].concat(LGO),cfg.pool)+'</div><div class="opts"><label><input type="checkbox" id="o_snd"'+(cfg.snd?" checked":"")+'>Sound effects</label><label><input type="checkbox" id="o_hap"'+(cfg.hap?" checked":"")+'>Vibration</label></div><div class="step"><i>03</i>Kick off</div><button class="btn" id="go" type="button" style="width:100%">Start solo run</button></div>';
+h+='<div class="stat" style="margin-top:0"><div><b>'+sb+'</b><span>Personal best</span></div><div><b>'+sg+'</b><span>Solo runs</span></div></div><div class="r">'+opt("sr","Run length",[[10,"10 rounds"],[20,"20 rounds"],[99,"Endless, 3 strikes"]],cfg.sr||10)+opt("tm","Turn timer",[[0,"Off"],[15,"15 seconds"],[20,"20 seconds"],[30,"30 seconds"]],cfg.T)+poolCtl(cfg.pool)+'</div>'+poolExtra(cfg.pool)+'<div class="opts"><label><input type="checkbox" id="o_snd"'+(cfg.snd?" checked":"")+'>Sound effects</label><label><input type="checkbox" id="o_hap"'+(cfg.hap?" checked":"")+'>Vibration</label></div><div class="step"><i>03</i>Kick off</div><button class="btn" id="go" type="button" style="width:100%">Start solo run</button></div>';
 $("app").innerHTML=h;
 document.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{cfg.mode=b.dataset.m;save();enter=true;setup();post()});
 document.querySelectorAll(".opts input").forEach(i=>i.onchange=()=>{cfg[i.id.slice(2)]=i.checked;save()});
@@ -178,7 +199,7 @@ if(mode==="d"){if(ST.daily[key]){S={ph:"dd",dk:key};draw();return}seed=hs(key);p
 else{seed=CH?hs(chSeedCode()):null;pool=P.filter(p=>inPool(p,cfg.pool)&&(mode!=="p"||p.cl.split(", ").length>=4));names=mode==="s"?["You"]:cfg.names;if(mode==="s"){R=cfg.sr||10;pen=false;ac=false;teams=false}}
 S={ph:"play",mode,dk:key,pl:names.map(n=>({n,s:0})),deck:shuf(pool).slice(0,Math.min(R,pool.length)),i:0,sh:1,t:0,done:false,msg:"",err:"",last:-1,hl:false,cs:null,res:[],run:0,t0:0,pen,ac,teams,T,solo:mode==="s"?{miss:0,endless:R>=99}:null};enter=true;
 if(!S.deck.length){/* never let an empty pool start a round; go back and say why */
-S={ph:"setup"};enter=true;draw();setErr("er","No players match that player pool. Try Everyone.");return}
+S={ph:"setup"};enter=true;draw();setErr("er","No players match "+POOLNAME(cfg.pool)+(mode==="p"?" with a career path of 4+ clubs":"")+". Pick another filter (or Everyone).");return}
 draw()}
 function guess(skip){
 const p=S.deck[S.i],me=S.pl[S.t];let pn=false;
@@ -275,7 +296,7 @@ pr.on("error",e=>{if(!done)rej({code:e.type==="peer-unavailable"?"not_found":"up
 const CODE="abcdefghjkmnpqrstuvwxyz23456789",genCode=()=>Array.from({length:6},()=>CODE[Math.floor(Math.random()*CODE.length)]).join("");
 const NOROOM="Online play is not available right now. Check your connection and reload.";
 function olSetup(h){
-h+='<h3>Your name</h3><input id="on" maxlength="14" autocomplete="off" placeholder="Name" aria-label="Your name" value="'+esc(cfg.on||"")+'"><div class="r" style="margin-top:12px">'+opt("rd","Rounds",[[5,"5"],[10,"10"],[15,"15"]],[5,10,15].includes(cfg.R)?cfg.R:10)+opt("sp","New clue every",[[10,"10 seconds"],[15,"15 seconds"],[20,"20 seconds"]],cfg.sp||15)+opt("pl","Players",[["x","Everyone"],["0","Current stars"],["1","Legends"]].concat(LGO),cfg.pool)+'<div style="flex:1 1 100%"><label class="lab" for="ors">Room seed, optional</label><input id="ors" maxlength="10" placeholder="Empty = random" style="margin-top:6px" autocomplete="off" aria-label="Room seed, optional" value="'+esc(cfg.rs||"")+'"></div></div><div class="opts"><label><input type="checkbox" id="o_pen"'+(cfg.pen?" checked":"")+'>Wrong guess costs 1</label><label><input type="checkbox" id="o_snd"'+(cfg.snd?" checked":"")+'>Sound effects</label><label><input type="checkbox" id="o_hap"'+(cfg.hap?" checked":"")+'>Vibration</label></div><div class="step"><i>03</i>Open the room</div><button class="btn" id="hs" type="button" style="width:100%">Host a room</button><h3 style="margin:22px 0 10px">Or join a friend</h3><div class="r"><input id="jc" maxlength="6" autocomplete="off" autocapitalize="off" placeholder="Room code" aria-label="Room code"><button class="gh" id="jn" type="button" style="flex:0 0 auto">Join room</button></div><div class="err" aria-live="polite" id="er">'+(RM?"":NOROOM)+'</div><p class="who" style="font-size:13px">'+(RSRC==="claude"?"Everyone playing must open this page while signed in to claude.ai with access to it. People on a public link can not join a room.":"Share the code with friends anywhere. Everyone opens this page and taps Join room.")+'</p></div>';
+h+='<h3>Your name</h3><input id="on" maxlength="14" autocomplete="off" placeholder="Name" aria-label="Your name" value="'+esc(cfg.on||"")+'"><div class="r" style="margin-top:12px">'+opt("rd","Rounds",[[5,"5"],[10,"10"],[15,"15"]],[5,10,15].includes(cfg.R)?cfg.R:10)+opt("sp","New clue every",[[10,"10 seconds"],[15,"15 seconds"],[20,"20 seconds"]],cfg.sp||15)+poolCtl(cfg.pool)+'<div style="flex:1 1 100%"><label class="lab" for="ors">Room seed, optional</label><input id="ors" maxlength="10" placeholder="Empty = random" style="margin-top:6px" autocomplete="off" aria-label="Room seed, optional" value="'+esc(cfg.rs||"")+'"></div>'+poolExtra(cfg.pool)+'</div><div class="opts"><label><input type="checkbox" id="o_pen"'+(cfg.pen?" checked":"")+'>Wrong guess costs 1</label><label><input type="checkbox" id="o_snd"'+(cfg.snd?" checked":"")+'>Sound effects</label><label><input type="checkbox" id="o_hap"'+(cfg.hap?" checked":"")+'>Vibration</label></div><div class="step"><i>03</i>Open the room</div><button class="btn" id="hs" type="button" style="width:100%">Host a room</button><h3 style="margin:22px 0 10px">Or join a friend</h3><div class="r"><input id="jc" maxlength="6" autocomplete="off" autocapitalize="off" placeholder="Room code" aria-label="Room code"><button class="gh" id="jn" type="button" style="flex:0 0 auto">Join room</button></div><div class="err" aria-live="polite" id="er">'+(RM?"":NOROOM)+'</div><p class="who" style="font-size:13px">'+(RSRC==="claude"?"Everyone playing must open this page while signed in to claude.ai with access to it. People on a public link can not join a room.":"Share the code with friends anywhere. Everyone opens this page and taps Join room.")+'</p></div>';
 $("app").innerHTML=h;
 document.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{cfg.mode=b.dataset.m;save();enter=true;setup();post()});
 document.querySelectorAll(".opts input").forEach(i=>i.onchange=()=>{cfg[i.id.slice(2)]=i.checked;save()});
@@ -311,7 +332,7 @@ else{if(cfg.pen)HS.sc[id].s=Math.max(0,HS.sc[id].s-1);HS.fb[id]=HS.k[id]+":0"}
 hostPub();olRender()}
 function hostNext(){HS.idx++;if(HS.idx>=HS.deck.length){HS.ph="end";return}const a=HS.deck[HS.idx];HS.ans=a;HS.r=HS.idx+1;HS.clues=clues(a);HS.sh=1;HS.tl=HS.T;HS.res=null;HS.fb={}}
 function hostTick(){if(!HS)return;if(HS.ph==="play"){HS.tl--;if(HS.tl<=0){if(HS.res)hostNext();else if(HS.sh<5){HS.sh++;HS.tl=HS.T}else{HS.res={n:HS.ans.n,nat:HS.ans.nat,ft:HS.ans.ft,by:"",pts:0};HS.tl=5}}}hostPub();olRender()}
-function hostStart(){const pool=P.filter(x=>inPool(x,cfg.pool));if(!pool.length){olStatus("That player pool has no players. Pick Everyone.");return}
+function hostStart(){const pool=P.filter(x=>inPool(x,cfg.pool));if(!pool.length){olStatus("No players match "+POOLNAME(cfg.pool)+". Pick another filter (or Everyone).");return}
  seed=cfg.rs?hs("kr"+cfg.rs):null;HS.deck=shuf(pool).slice(0,Math.min(HS.N,pool.length));seed=null;
  HS.N=HS.deck.length;HS.idx=-1;Object.values(HS.sc).forEach(x=>x.s=0);HS.ph="play";HS.at=Date.now();hostNext();hostPub();olRender();try{R.lock(true)}catch(e){}}
 function olRender(){
@@ -489,6 +510,7 @@ document.addEventListener("click",e=>{
  if(!e.target.closest)return;
  if(e.target.closest("#rgr")){rgResume();return}
  if(e.target.closest("#rgd")){rgDiscard();return}
+ if(e.target.closest("#pclr")){cfg.pool="x";save();enter=true;S={ph:"setup"};draw();return}
  if(!e.target.closest("#cown"))return;
  CH=null;enter=true;S={ph:"setup"};draw();
 });

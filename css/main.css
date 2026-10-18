@@ -72,6 +72,13 @@ h3:before{content:"";flex:none;width:10px;height:.95em;background:var(--ink);tra
 .step:after{content:"";flex:1;height:1px;background:var(--line)}
 .who{margin:18px 0 14px;font-size:16px;color:var(--mut)}
 .who b{color:var(--ink)}
+/* active pool filter bar (league / nation / era) under the setup pickers */
+.poolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:12px 0 0;padding:10px 12px;background:var(--soft);border:1px solid var(--line);border-radius:3px;font:700 13px var(--fd);letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+.poolbar .poollab{flex:1 1 190px;min-width:0}
+.poolbar b{color:var(--ink)}
+.poolbar .gh{flex:0 0 auto;min-height:40px;padding:0 14px;font:700 13px var(--fd);letter-spacing:.1em}
+.poolbar.thin{border-color:var(--ink)}
+.poolbar.thin .poollab{color:var(--ink)}
 .mdesc{margin:0 0 26px;max-width:60ch;font-size:17px}
 .lab{display:block;margin-bottom:6px;font:700 13px var(--fd);letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
 .err{min-height:22px;margin:12px 0 18px;color:var(--bad);font-size:15px;font-weight:600}
