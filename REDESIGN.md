@@ -49,3 +49,9 @@ Small additive JS (display only): `S.nk`, `S.sk` for fresh-clue and streak-tab d
 - Wordle: "Copy result" → "Share result" — mode line + the 6-row emoji grid + a link: dated daily `?d=` for the Daily, a seeded random-puzzle link for a rematch.
 - Grid: new "Share result" button on the finished screen — boxes count, difficulty, seeded rematch link.
 - Daily: same share string as before (grid + score) plus a `?d=YYYY-MM-DD` replay link.
+
+## v14.2 — granular haptics
+- `navigator.vibrate` now uses distinct patterns instead of the old single generic buzz: wrong guess / grid strike = `[45,55,45]` (two short), grid box fill = `[30]`, correct guess / round solve / online correct / wordle target = `[35,45,70]`. Wordle solves and grid boxes previously had no haptic at all — added.
+- Vibration is gated by its own `cfg.hap` toggle ("Vibration", default ON) instead of the old combined "Sound and haptics" checkbox, which is now "Sound effects". Behaviour change: a device with sound off previously also got no vibration; now vibration follows the Vibration toggle only. `cfg.hap` defaults to true even for users without a stored setting.
+- The Vibration toggle ships on the Classic/Career/Solo, Online, and Grid setup screens (every screen that already had the sound checkbox). Wordle's setup screen has no options area, so no toggle there — turning it off in another mode applies app-wide.
+- All callsites wrap `navigator.vibrate` in a guard + try/catch: absent API (iOS Safari) is a silent no-op.
