@@ -44,6 +44,10 @@ const DAILYQ=QP.get("d")||"",DAILYOK=/^\d{4}-\d{2}-\d{2}$/.test(DAILYQ);
 /* grid stats labels live up here: the boot IIFE below re-renders setup synchronously,
    and a saved Grid mode would otherwise hit these before their declaration (TDZ). */
 const GDN={e:"Easy",m:"Medium",h:"Hard"},GDD={e:"Big clubs and common nations. Every box has 3 or more answers.",m:"Mid-size clubs. Every box has 2 or more answers.",h:"Any club, rare pairings. Some boxes have just one answer."};
+/* resume snapshot version + resumable modes: same TDZ reason — rgBanner() runs during that
+   early setup render and would otherwise hit these before their declaration */
+const RGV=1,RGM=["c","p","s"];
+const rgLab=m=>({c:"Classic",p:"Career path",s:"Solo"})[m]||m;
 const gbest=d=>(ST.gbd&&ST.gbd[d])||(d==="m"?ST.gb||0:0);
 const save=()=>{try{localStorage.setItem("ykb",JSON.stringify(cfg))}catch(e){}};
 const sv=()=>{try{localStorage.setItem("ykbs",JSON.stringify(ST))}catch(e){}};
@@ -132,7 +136,7 @@ function opt(id,l,v,c){return'<div><label class="lab" for="'+id+'">'+l+'</label>
 const MODES=[["c","Classic","Pass the phone","01"],["s","Solo","You against the clock","02"],["w","Wordle","Six tries, colour clues","03"],["g","Grid","3×3 club and nation","04"],["p","Career path","Clubs unlock one by one","05"],["d","Daily","Same five for everyone","06"],["o","Online","Race friends live","07"]];
 function setup0(){
 stopT();const m=cfg.mode;
-let h=chBanner()+'<div class="card setup"><div class="step"><i>01</i>Pick your mode</div><div class="seg" role="group" aria-label="Game mode">'+MODES.map(a=>'<button type="button" data-m="'+a[0]+'" class="'+(m===a[0]?"on":"")+'" aria-pressed="'+(m===a[0])+'"><i>'+a[3]+'</i><b>'+a[1]+'</b><small>'+a[2]+'</small></button>').join("")+'</div><div class="step"><i>02</i>Set up '+MODES.find(a=>a[0]===m)[1]+'</div><p class="who mdesc">'+({c:"Five clues in a random order. Fewer clues, more points.",p:"Clubs unlock one by one. Name the player before the career ends.",d:"Same five players for everyone today. One try, no restarts.",w:"Find the mystery player in six tries. Each guess colors league, nation, position, club and birth year.",g:"Fill the 3 by 3 board. Name a player who fits a club row and a nation column.",s:"Just you against the clock. Three misses ends an endless run. Beat your personal best.",o:"Race your friends live on separate phones. First to name the player scores."})[m]+'</p>';
+let h=chBanner()+'<div class="card setup">'+rgBanner()+'<div class="step"><i>01</i>Pick your mode</div><div class="seg" role="group" aria-label="Game mode">'+MODES.map(a=>'<button type="button" data-m="'+a[0]+'" class="'+(m===a[0]?"on":"")+'" aria-pressed="'+(m===a[0])+'"><i>'+a[3]+'</i><b>'+a[1]+'</b><small>'+a[2]+'</small></button>').join("")+'</div><div class="step"><i>02</i>Set up '+MODES.find(a=>a[0]===m)[1]+'</div><p class="who mdesc">'+({c:"Five clues in a random order. Fewer clues, more points.",p:"Clubs unlock one by one. Name the player before the career ends.",d:"Same five players for everyone today. One try, no restarts.",w:"Find the mystery player in six tries. Each guess colors league, nation, position, club and birth year.",g:"Fill the 3 by 3 board. Name a player who fits a club row and a nation column.",s:"Just you against the clock. Three misses ends an endless run. Beat your personal best.",o:"Race your friends live on separate phones. First to name the player scores."})[m]+'</p>';
 if(m==="o"){olSetup(h);return}
 if(m==="s"){soloSetup(h);return}
 if(m==="w"){wordleSetup(h);return}
@@ -173,7 +177,7 @@ else{stopT();S.done=true;S.last=-1;S.run=0;S.res.push(0);S.msg="Nobody got that 
 draw()}
 function next(){S.i++;if(S.i>=S.deck.length||(S.solo&&S.solo.miss>=3)){finish();return}S.sh=1;S.hl=false;S.cs=null;S.t0=0;S.done=false;S.msg="";S.err="";S.t=(S.t+1)%S.pl.length;enter=true;draw()}
 function finish(){
-S.ph="end";ST.g++;seed=null;if(S.mode==="s"){const sc=S.pl[0].s;ST.sg=(ST.sg||0)+1;if(sc>(ST.sb||0)){ST.sb=sc;S.nb=1}}
+S.ph="end";ST.g++;seed=null;rgClear();if(S.mode==="s"){const sc=S.pl[0].s;ST.sg=(ST.sg||0)+1;if(sc>(ST.sb||0)){ST.sb=sc;S.nb=1}}
 if(S.mode==="d"){const k=S.dk||dkey(new Date());ST.daily[k]={s:S.pl[0].s,g:grid(S.res)};ST.ls=Math.max(ST.ls||0,streak())}
 sv();enter=true;draw();if(Math.max(...S.pl.map(x=>x.s))>0)confetti()}
 function post(){
@@ -225,6 +229,7 @@ h+='<div class="qrow"><button class="gh qt" type="button">Quit game</button></di
 if(S.teams)h+='<p class="who tmline">Team A <b>'+tm(0)+'</b> and Team B <b>'+tm(1)+'</b></p>';
 h+='<div class="chips strip">'+S.pl.map((x,k)=>'<span class="chip'+(!S.done&&k===S.t?' on':'')+'">'+(S.teams?'<i class="tm">'+(k%2?"B":"A")+'</i>':'')+'<span class="nm">'+esc(x.n)+'</span> <b data-to="'+x.s+'" data-from="'+(S.pv&&S.pv[k]!=null?S.pv[k]:x.s)+'">'+x.s+'</b></span>').join("")+'</div></div>'+(S.ac?DL:"");
 $("app").innerHTML=h;
+rgSave();
 say(S.done?S.msg+". The answer was "+p.n:"Clue "+S.sh+". "+cs[S.sh-1]);
 if(S.done){$("nx").onclick=next}else{$("gb").onclick=()=>guess(false);$("sk").onclick=()=>guess(true);if($("hl"))$("hl").onclick=()=>{const k=left;S.hl=true;draw();left=k};$("g").onkeydown=e=>{setErr("er","");if(e.key==="Enter")guess(false)};$("g").focus({preventScroll:true});runT()}}
 $("tg").onclick=()=>{const r=document.documentElement,d=r.dataset.theme!=="light";r.dataset.theme=d?"light":"dark";cfg.light=d;save();$("tg").setAttribute("aria-pressed",String(d))};
@@ -340,6 +345,47 @@ function distHtml(){
  if(!rows.some(r=>r[1].some(n=>n)))return"";
  const mx=Math.max(1,...rows.map(r=>Math.max(...r[1])));
  return '<h3>Solved at clue</h3><div class="dist">'+rows.map(r=>'<div class="drow"><span class="dlab">'+r[0]+'</span><div class="dbars" role="img" aria-label="'+r[0]+" solved at "+r[1].map((n,i)=>"clue "+(i+1)+": "+n).join(", ")+'">'+r[1].map((n,i)=>'<span class="dbar"><em>'+ (i+1) +'</em><span class="dtrk"><i style="--w:'+(n?Math.max(8,Math.round(n/mx*100)):0)+'%"></i></span><b>'+n+'</b></span>').join("")+'</div></div>').join("")+'</div>'}
+
+/* resume: a serializable snapshot of an in-progress Classic / Career / Solo game, kept in the
+   existing stats object (ST.rg inside ykbs). Versioned, and anything incompatible is dropped
+   without a crash. Online is deliberately not resumable: the host owns the room's state. */
+function rgSave(){try{
+ if(!S||S.ph!=="play"||RGM.indexOf(S.mode)<0||!S.deck||!S.deck.length||!S.pl||!S.pl.length)return;
+ ST.rg={v:RGV,m:S.mode,dk:S.dk||null,deck:S.deck.map(p=>p.n),i:S.i,sh:S.sh,t:S.t,
+  names:S.pl.map(x=>x.n),pl:S.pl.map(x=>x.s),cs:S.cs||null,res:S.res.slice(),run:S.run,last:S.last,hl:!!S.hl,
+  pen:!!S.pen,ac:!!S.ac,teams:!!S.teams,T:S.T||0,solo:S.solo?{miss:S.solo.miss,endless:!!S.solo.endless}:null,
+  seed:typeof seed==="number"?seed:null,ch:CH?CH.code:null,el:S.t0?Date.now()-S.t0:0};
+ sv()}catch(e){}}
+function rgClear(){try{if(ST.rg){ST.rg=null;sv()}}catch(e){}}
+function rgQuit(){if(S&&RGM.indexOf(S.mode)>=0)rgClear()} /* quitting a resumable game abandons it */
+function rgGet(){try{const r=ST.rg;
+ if(!r||typeof r!=="object"){rgClear();return null}
+ const ok=r.v===RGV&&RGM.indexOf(r.m)>=0&&Array.isArray(r.deck)&&r.deck.length>0&&
+  Array.isArray(r.names)&&r.names.length>0&&Array.isArray(r.pl)&&r.pl.length===r.names.length&&
+  r.pl.every(n=>typeof n==="number"&&isFinite(n))&&Array.isArray(r.res)&&r.res.every(x=>typeof x==="number")&&
+  (r.cs==null||(Array.isArray(r.cs)&&r.cs.length===5&&r.cs.every(x=>typeof x==="string")))&&
+  (r.solo==null||(typeof r.solo==="object"&&Number.isInteger(r.solo.miss)))&&
+  Number.isInteger(r.i)&&r.i>=0&&r.i<r.deck.length&&Number.isInteger(r.sh)&&r.sh>=1&&r.sh<=5;
+ if(!ok){rgClear();return null}
+ const by={};P.forEach(p=>by[p.n]=p);
+ if(!r.deck.every(n=>by[n])){rgClear();return null}
+ return Object.assign({},r,{by:by});
+ }catch(e){rgClear();return null}}
+function rgBanner(){const r=rgGet();if(!r)return"";
+ const top=Math.max.apply(null,r.pl.concat([0]));
+ return '<section class="rgban" aria-label="Saved game"><span class="rg-t">Game in progress</span><b>'+esc(rgLab(r.m))+'</b><span class="rg-s">Round '+(r.i+1)+' of '+r.deck.length+' · '+(r.pl.length>1?"top ":"")+top+' pts</span><button class="btn" id="rgr" type="button">Resume</button><button class="gh" id="rgd" type="button">Discard</button></section>'}
+/* Resume restarts the current round's countdown but keeps the elapsed time, so a paused round
+   cannot set a fake "fastest solve". Rounds, scores, turn, clue index and the current round's
+   five clues come from the snapshot; a seeded game also continues its own clue order. */
+function rgResume(){const r=rgGet();if(!r){enter=true;draw();return}
+ if(r.ch)CH={code:r.ch};
+ seed=typeof r.seed==="number"?r.seed:null;
+ S={ph:"play",mode:r.m,dk:r.dk,pl:r.names.map((n,k)=>({n:n,s:r.pl[k]})),deck:r.deck.map(n=>r.by[n]),
+  i:r.i,sh:r.sh,t:r.t,done:false,msg:"",err:"",last:typeof r.last==="number"?r.last:-1,hl:!!r.hl,
+  cs:r.cs,res:r.res.slice(),run:r.run||0,t0:Date.now()-(r.el||0),pen:!!r.pen,ac:!!r.ac,teams:!!r.teams,
+  T:r.T||0,solo:r.solo||null};
+ enter=true;draw()}
+function rgDiscard(){rgClear();enter=true;draw()}
 function addArchive(){const card=$("app").querySelector(".card");if(!card)return;const box=document.createElement("div");box.className="arch";box.innerHTML='<h3 style="margin:18px 0 8px">Previous days</h3><div class="chips" id="ar" style="margin:0"></div>';card.appendChild(box);const w=$("ar");for(let i=1;i<=7;i++){const d=new Date(Date.now()-i*864e5),k=dkey(d),done=ST.daily[k];const b=document.createElement("button");b.type="button";b.className="gh";b.textContent=d.toLocaleDateString(undefined,{month:"short",day:"numeric"})+(done?" ✓":"");b.onclick=()=>start("d",k);w.appendChild(b)}}
 function wordleSetup(h){h+='<div class="step"><i>03</i>Kick off</div><div class="r"><button class="btn" id="go" type="button">Play today</button><button class="gh" id="rnd" type="button" style="flex:0 0 auto">Random puzzle</button></div><div class="arch" style="margin-top:6px"></div><div class="err" aria-live="polite" id="er"></div></div>';$("app").innerHTML=h;document.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{cfg.mode=b.dataset.m;save();enter=true;setup();post()});$("go").onclick=()=>start("w");$("rnd").onclick=()=>start("w",null,true);const w=$("app").querySelector(".arch");for(let i=1;i<=7;i++){const d=new Date(Date.now()-i*864e5),k=dkey(d),b=document.createElement("button");b.type="button";b.className="gh";b.style.cssText="padding:8px 12px;font-size:14px;margin:4px 6px 4px 0";b.textContent=d.toLocaleDateString(undefined,{month:"short",day:"numeric"})+(ST.wd&&ST.wd[k]?" ✓":"");b.onclick=()=>start("w",k);w.appendChild(b)}}
 let WS=null,GS=null;
@@ -413,12 +459,17 @@ let ms="";GS.f.forEach((x,i)=>{if(x)return;const r=GS.rows[Math.floor(i/3)],c=GS
 $("app").innerHTML='<div class="card narrow"><h3>Grid finished</h3><div class="stat"><div><b>'+n+'/9</b><span>Boxes filled</span></div><div><b>'+(GS.max<99?gbest(d)+"/9":"-")+'</b><span>'+(GS.max<99?"Best on "+GDN[d]:"Practice run")+'</span></div></div>'+(ms?'<p class="who">Boxes you missed, and who fits</p>'+ms:"")+'<div class="r"><button class="btn" id="gan" type="button">New grid</button><button class="gh" id="gsh" type="button">Share result</button><button class="gh" id="gbk" type="button">Back</button></div></div>';addShot(gridImg());post();$("gan").onclick=()=>gridStart();$("gsh").onclick=()=>share("YouKnowBall ⚽ Grid — "+n+"/9 boxes on "+GDN[d]+"\n"+rematchLink("g"),$("gsh"));$("gbk").onclick=()=>{S={ph:"setup"};enter=true;draw()}}
 
 setup();post();
-/* open a challenge or a dated daily straight from the link; no params = the normal home screen */
-if(CH){if(cfg.mode==="w")start("w",null,true);else start(cfg.mode)}
+/* open a challenge or a dated daily straight from the link; no params = the normal home screen.
+   A challenge that is already in progress is NOT restarted: Home shows the Resume banner instead. */
+const rgs=rgGet();
+if(CH){if(!rgs||rgs.ch!==SEEDQ){if(cfg.mode==="w")start("w",null,true);else start(cfg.mode)}}
 else if(DAILYOK)start("d",DAILYQ);
 /* clear the challenge from anywhere without touching the params in history */
 document.addEventListener("click",e=>{
- if(!e.target.closest||!e.target.closest("#cown"))return;
+ if(!e.target.closest)return;
+ if(e.target.closest("#rgr")){rgResume();return}
+ if(e.target.closest("#rgd")){rgDiscard();return}
+ if(!e.target.closest("#cown"))return;
  CH=null;enter=true;S={ph:"setup"};draw();
 });
 (function(){const el=$("intro");if(!el)return;

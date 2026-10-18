@@ -62,7 +62,7 @@ document.addEventListener("click",e=>{
   if(!b.classList.contains("arm")){
     b.dataset.t=b.textContent;b.textContent="Tap again to quit";b.classList.add("arm");
     clearTimeout(b._t);b._t=setTimeout(()=>{if(b.isConnected){b.textContent=b.dataset.t;b.classList.remove("arm")}},3000);return}
-  stopT();S={ph:"setup"};enter=true;draw();
+  stopT();rgQuit();S={ph:"setup"};enter=true;draw();
 });
 
 /* Visible error messages instead of silent failures. Progress is kept. */
