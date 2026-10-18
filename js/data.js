@@ -1,19 +1,19 @@
 const RAW=`Lionel Messi|Argentina|forward|1987|Barcelona, PSG, Inter Miami|Won the 2022 World Cup and 8 Ballon d'Ors|leo|0
 Cristiano Ronaldo|Portugal|forward|1985|Sporting, Man United, Real Madrid, Juventus|Won 5 Ballon d'Ors and Euro 2016|cristiano,cr7|0
-Neymar|Brazil|forward|1992|Santos, Barcelona, PSG|Moved to PSG for a world record fee in 2017||0
+Neymar|Brazil|forward|1992|Santos, Barcelona, PSG, Al-Hilal|Moved to PSG for a world record fee in 2017||0
 Kylian Mbappe|France|forward|1998|Monaco, PSG, Real Madrid|Hat-trick in the 2022 World Cup final|kylian|0
 Erling Haaland|Norway|striker|2000|Molde, Salzburg, Dortmund, Man City|Scored 36 league goals in his first Premier League season|haland,erling|0
-Mohamed Salah|Egypt|winger|1992|Basel, Chelsea, Roma, Liverpool|Won multiple Premier League Golden Boots|mo salah|0
-Luka Modric|Croatia|midfielder|1985|Dinamo Zagreb, Tottenham, Real Madrid|Won the 2018 Ballon d'Or|luka|0
-Kevin De Bruyne|Belgium|midfielder|1991|Genk, Chelsea, Wolfsburg, Man City|One of the best assist makers ever|de bruyne,debruyne,kdb,kevin|0
+Mohamed Salah|Egypt|winger|1992|Basel, Chelsea, Fiorentina, Roma, Liverpool|Won multiple Premier League Golden Boots|mo salah|0
+Luka Modric|Croatia|midfielder|1985|Dinamo Zagreb, Tottenham, Real Madrid, AC Milan|Won the 2018 Ballon d'Or|luka|0
+Kevin De Bruyne|Belgium|midfielder|1991|Genk, Chelsea, Wolfsburg, Man City, Napoli|One of the best assist makers ever|de bruyne,debruyne,kdb,kevin|0
 Jude Bellingham|England|midfielder|2003|Birmingham, Dortmund, Real Madrid|Joined Real Madrid in 2023|jude|0
 Vinicius Junior|Brazil|winger|2000|Flamengo, Real Madrid|Scored the winner in the 2022 Champions League final|vinicius,vini,vini jr|0
 Robert Lewandowski|Poland|striker|1988|Lech Poznan, Dortmund, Bayern, Barcelona|Scored 41 Bundesliga goals in one season|lewa|0
 Son Heung-min|South Korea|forward|1992|Hamburg, Leverkusen, Tottenham|Shared the 2021-22 Premier League Golden Boot|heung min,sonny|0
-Harry Kane|England|striker|1993|Tottenham, Bayern|England's all-time top scorer|harry|0
+Harry Kane|England|striker|1993|Tottenham, Leicester, Bayern|England's all-time top scorer|harry|0
 Bukayo Saka|England|winger|2001|Arsenal|Arsenal academy graduate||0
 Lamine Yamal|Spain|winger|2007|Barcelona|Starred at Euro 2024 as a teenager||0
-Rodri|Spain|midfielder|1996|Villarreal, Atletico, Man City|Won the 2024 Ballon d'Or||0
+Rodri|Spain|midfielder|1996|Villarreal, Atletico, Man City, Barcelona|Won the 2024 Ballon d'Or||0
 Phil Foden|England|midfielder|2000|Man City|Man City academy graduate|phil|0
 Virgil van Dijk|Netherlands|defender|1991|Groningen, Celtic, Southampton, Liverpool|Liverpool captain|van dijk,vandijk,virgil|0
 Thibaut Courtois|Belgium|goalkeeper|1992|Genk, Chelsea, Atletico, Real Madrid|Won the 2022 Champions League with Real Madrid|thibaut|0
@@ -21,7 +21,7 @@ Antoine Griezmann|France|forward|1991|Real Sociedad, Atletico, Barcelona|Won the
 Sadio Mane|Senegal|winger|1992|Metz, Salzburg, Southampton, Liverpool, Bayern|Won the Africa Cup of Nations with Senegal||0
 Achraf Hakimi|Morocco|defender|1998|Real Madrid, Dortmund, Inter, PSG|Helped Morocco reach the 2022 World Cup semi-final|achraf|0
 Pedri|Spain|midfielder|2002|Las Palmas, Barcelona|Won the 2021 Golden Boy||0
-Rafael Leao|Portugal|winger|1999|Lille, AC Milan|Helped AC Milan win Serie A in 2022|rafa|0
+Rafael Leao|Portugal|winger|1999|Sporting, Lille, AC Milan, Galatasaray|Helped AC Milan win Serie A in 2022|rafa|0
 Victor Osimhen|Nigeria|striker|1998|Lille, Napoli, Galatasaray|Led Napoli to the 2023 Serie A title||0
 Jamal Musiala|Germany|midfielder|2003|Chelsea academy, Bayern|Left England for Bayern as a teenager||0
 Florian Wirtz|Germany|midfielder|2003|Leverkusen, Liverpool|Starred in Leverkusen's unbeaten 2023-24 title||0
@@ -30,9 +30,9 @@ Declan Rice|England|midfielder|1999|West Ham, Arsenal|Moved from West Ham to Ars
 Martin Odegaard|Norway|midfielder|1998|Real Madrid, Real Sociedad, Arsenal|Arsenal captain||0
 Luis Suarez|Uruguay|striker|1987|Ajax, Liverpool, Barcelona, Atletico, Inter Miami|Bit Chiellini at the 2014 World Cup||0
 Sergio Ramos|Spain|defender|1986|Sevilla, Real Madrid, PSG|Scored a 93rd-minute equalizer in the 2014 Champions League final|sergio|0
-Diego Maradona|Argentina|forward|1960|Boca Juniors, Barcelona, Napoli|Scored the Hand of God goal in 1986|diego|1
+Diego Maradona|Argentina|forward|1960|Boca Juniors, Barcelona, Napoli, Sevilla|Scored the Hand of God goal in 1986|diego|1
 Pele|Brazil|forward|1940|Santos, New York Cosmos|Won three World Cups||1
-Ronaldinho|Brazil|forward|1980|Gremio, PSG, Barcelona, AC Milan|Won the 2005 Ballon d'Or|dinho|1
+Ronaldinho|Brazil|forward|1980|Gremio, PSG, Barcelona, AC Milan, Flamengo, Fluminense|Won the 2005 Ballon d'Or|dinho|1
 Zinedine Zidane|France|midfielder|1972|Cannes, Bordeaux, Juventus, Real Madrid|Headbutt in the 2006 World Cup final|zizou|1
 Thierry Henry|France|forward|1977|Monaco, Juventus, Arsenal, Barcelona|Arsenal's all-time top scorer|thierry,titi|1
 David Beckham|England|midfielder|1975|Man United, Real Madrid, LA Galaxy, AC Milan, PSG|Famous for curling free kicks|becks|1
@@ -40,7 +40,7 @@ Andres Iniesta|Spain|midfielder|1984|Barcelona, Vissel Kobe|Scored the 2010 Worl
 Xavi Hernandez|Spain|midfielder|1980|Barcelona, Al Sadd|Passing maestro who later managed Barcelona|xavi|1
 Andrea Pirlo|Italy|midfielder|1979|Brescia, Inter, AC Milan, Juventus|Panenka penalty against England at Euro 2012|andrea|1
 Didier Drogba|Ivory Coast|striker|1978|Marseille, Chelsea, Galatasaray|Won the 2012 Champions League with Chelsea|didier|1
-Zlatan Ibrahimovic|Sweden|striker|1981|Ajax, Juventus, Barcelona, AC Milan, PSG, Man United|Overhead kick against England in 2012|zlatan,ibra|1
+Zlatan Ibrahimovic|Sweden|striker|1981|Ajax, Juventus, Inter, Barcelona, AC Milan, PSG, Man United|Overhead kick against England in 2012|zlatan,ibra|1
 Eden Hazard|Belgium|winger|1991|Lille, Chelsea, Real Madrid|Retired in 2023|eden|1
 Francesco Totti|Italy|forward|1976|Roma|One-club man nicknamed Il Capitano|francesco|1
 Gianluigi Buffon|Italy|goalkeeper|1978|Parma, Juventus, PSG|Won the 2006 World Cup|gigi|1
@@ -54,53 +54,53 @@ Kaka|Brazil|midfielder|1982|Sao Paulo, AC Milan, Real Madrid|Won the 2007 Ballon
 Iker Casillas|Spain|goalkeeper|1981|Real Madrid, Porto|Captained Spain to the 2010 World Cup|iker|1
 Carles Puyol|Spain|defender|1978|Barcelona|Barcelona captain famous for his long hair||1
 Luis Figo|Portugal|winger|1972|Sporting, Barcelona, Real Madrid, Inter|Joined Real Madrid from Barcelona in 2000||1
-Samuel Eto'o|Cameroon|striker|1981|Mallorca, Barcelona, Inter|Won the treble with Barcelona and Inter|samuel|1
-George Weah|Liberia|striker|1966|Monaco, PSG, AC Milan|Won the 1995 Ballon d'Or, later became president|george|1
-Roberto Carlos|Brazil|defender|1973|Palmeiras, Inter, Real Madrid, Fenerbahce|Famous free kick against France in 1997|carlos|1
-Cafu|Brazil|defender|1970|Sao Paulo, Roma, AC Milan|Captained Brazil to the 2002 World Cup||1
+Samuel Eto'o|Cameroon|striker|1981|Real Madrid, Mallorca, Barcelona, Inter, Chelsea, Everton|Won the treble with Barcelona and Inter|samuel|1
+George Weah|Liberia|striker|1966|Monaco, PSG, AC Milan, Chelsea, Man City, Marseille|Won the 1995 Ballon d'Or, later became president|george|1
+Roberto Carlos|Brazil|defender|1973|Palmeiras, Inter, Real Madrid, Fenerbahce, Corinthians|Famous free kick against France in 1997|carlos|1
+Cafu|Brazil|defender|1970|Sao Paulo, Palmeiras, Roma, AC Milan|Captained Brazil to the 2002 World Cup||1
 Roberto Baggio|Italy|forward|1967|Fiorentina, Juventus, AC Milan, Inter|Missed the last penalty of the 1994 World Cup final|baggio|1
 Lautaro Martinez|Argentina|striker|1997|Racing, Inter|Nickname~El Toro, the bull|lautaro|0
 Julian Alvarez|Argentina|forward|2000|River Plate, Man City, Atletico|Nickname~La Arana, the spider|julian|0
-Enzo Fernandez|Argentina|midfielder|2001|River Plate, Benfica, Chelsea|Honour~Young Player of the 2022 World Cup|enzo|0
+Enzo Fernandez|Argentina|midfielder|2001|River Plate, Benfica, Chelsea, Man City|Honour~Young Player of the 2022 World Cup|enzo|0
 Alexis Mac Allister|Argentina|midfielder|1998|Argentinos Juniors, Brighton, Liverpool|Career twist~Won the 2022 World Cup, then joined Liverpool|alexis,mac allister|0
 Angel Di Maria|Argentina|winger|1988|Rosario Central, Benfica, Real Madrid, Man United, PSG, Juventus|Iconic moment~Scored in the 2022 World Cup final|di maria,dimaria,fideo|0
 Paulo Dybala|Argentina|forward|1993|Palermo, Juventus, Roma|Nickname~La Joya, the jewel|paulo|0
 Alisson Becker|Brazil|goalkeeper|1992|Internacional, Roma, Liverpool|Iconic moment~Scored a 95th-minute header for Liverpool|alisson|0
-Casemiro|Brazil|midfielder|1992|Sao Paulo, Real Madrid, Man United|Honour~Won five Champions Leagues with Real Madrid||0
-Raphinha|Brazil|winger|1996|Leeds, Barcelona|Career twist~Left Leeds for Barcelona in 2022||0
+Casemiro|Brazil|midfielder|1992|Sao Paulo, Real Madrid, Porto, Man United, Inter Miami|Honour~Won five Champions Leagues with Real Madrid||0
+Raphinha|Brazil|winger|1996|Sporting, Rennes, Leeds, Barcelona|Career twist~Left Leeds for Barcelona in 2022||0
 Rodrygo|Brazil|forward|2001|Santos, Real Madrid|Iconic moment~Two goals in 90 seconds against Man City in 2022||0
 Gavi|Spain|midfielder|2004|Barcelona|Honour~Won the 2022 Golden Boy||0
 Manuel Neuer|Germany|goalkeeper|1986|Schalke, Bayern|Style~Pioneered the sweeper-keeper role|manu|0
-Toni Kroos|Germany|midfielder|1990|Bayern, Real Madrid|Career twist~Retired after Euro 2024|toni|1
+Toni Kroos|Germany|midfielder|1990|Bayern, Leverkusen, Real Madrid|Career twist~Retired after Euro 2024|toni|1
 Thomas Muller|Germany|forward|1989|Bayern|Nickname~Raumdeuter, the space interpreter|thomas|0
-Mesut Ozil|Germany|midfielder|1988|Werder Bremen, Real Madrid, Arsenal, Fenerbahce|Trademark~Gentle left foot and elite playmaking|mesut|1
+Mesut Ozil|Germany|midfielder|1988|Schalke, Werder Bremen, Real Madrid, Arsenal, Fenerbahce|Trademark~Gentle left foot and elite playmaking|mesut|1
 Kai Havertz|Germany|forward|1999|Leverkusen, Chelsea, Arsenal|Iconic moment~Scored the 2021 Champions League final winner|kai|0
-Bernardo Silva|Portugal|midfielder|1994|Benfica, Monaco, Man City|Style~Tiny technical wizard who never stops running||0
+Bernardo Silva|Portugal|midfielder|1994|Benfica, Monaco, Man City, Real Madrid|Style~Tiny technical wizard who never stops running||0
 Bruno Fernandes|Portugal|midfielder|1994|Sporting, Man United|Role~Captain and set-piece specialist at Man United|bruno|0
 Ruben Dias|Portugal|defender|1997|Benfica, Man City|Honour~Anchored City's treble-winning defence in 2023|ruben|0
-Gianluigi Donnarumma|Italy|goalkeeper|1999|AC Milan, PSG|Honour~Player of the tournament at Euro 2020|gigio|0
+Gianluigi Donnarumma|Italy|goalkeeper|1999|AC Milan, PSG, Man City|Honour~Player of the tournament at Euro 2020|gigio|0
 Ousmane Dembele|France|forward|1997|Rennes, Dortmund, Barcelona, PSG|Honour~Won the 2025 Ballon d'Or|ousmane|0
-N'Golo Kante|France|midfielder|1991|Caen, Leicester, Chelsea, Al-Ittihad|Career twist~Won the Premier League with Leicester in 2016|ngolo|0
+N'Golo Kante|France|midfielder|1991|Caen, Leicester, Chelsea, Al-Ittihad, Fenerbahce|Career twist~Won the Premier League with Leicester in 2016|ngolo|0
 Paul Pogba|France|midfielder|1993|Man United, Juventus, Monaco|Celebration~The famous dab|paul|0
-Karim Benzema|France|striker|1987|Lyon, Real Madrid, Al-Ittihad|Honour~Won the 2022 Ballon d'Or|karim|0
-Jack Grealish|England|winger|1995|Aston Villa, Man City|Record~Cost a British record fee in 2021|jack|0
+Karim Benzema|France|striker|1987|Lyon, Real Madrid, Al-Ittihad, Al-Hilal|Honour~Won the 2022 Ballon d'Or|karim|0
+Jack Grealish|England|winger|1995|Aston Villa, Man City, Everton|Record~Cost a British record fee in 2021|jack|0
 Cole Palmer|England|midfielder|2002|Man City, Chelsea|Scored four goals in one half against Brighton in 2024|cole|0
 Jamie Vardy|England|striker|1987|Fleetwood, Leicester|Career twist~Went from non-league football to Premier League champion|jamie|0
 Gareth Bale|Wales|winger|1989|Southampton, Tottenham, Real Madrid, LAFC|Iconic moment~Overhead kick in the 2018 Champions League final|gareth|1
-Robin van Persie|Netherlands|striker|1983|Feyenoord, Arsenal, Man United|Iconic moment~Flying header against Spain at the 2014 World Cup|van persie,vanpersie,rvp|1
+Robin van Persie|Netherlands|striker|1983|Feyenoord, Arsenal, Man United, Fenerbahce|Iconic moment~Flying header against Spain at the 2014 World Cup|van persie,vanpersie,rvp|1
 Arjen Robben|Netherlands|winger|1984|PSV, Chelsea, Real Madrid, Bayern|Signature move~Cutting in from the right onto his left foot|arjen|1
 Frenkie de Jong|Netherlands|midfielder|1997|Ajax, Barcelona|Style~Elegant ball carrier who glides past pressure|de jong,dejong,frenkie|0
-Romelu Lukaku|Belgium|striker|1993|Anderlecht, Chelsea, Inter, Roma, Napoli|Record~Belgium's all-time top scorer|romelu|0
+Romelu Lukaku|Belgium|striker|1993|Anderlecht, Chelsea, Everton, Man United, Inter, Roma, Napoli, Fenerbahce|Record~Belgium's all-time top scorer|romelu|0
 Riyad Mahrez|Algeria|winger|1991|Leicester, Man City, Al-Ahli|Career twist~Won the title with Leicester, then the treble with Man City|riyad|0
 Yassine Bounou|Morocco|goalkeeper|1991|Sevilla, Al-Hilal|Nickname~Bono|bono|0
 Christian Pulisic|USA|winger|1998|Dortmund, Chelsea, AC Milan|Nickname~Captain America|christian|0
 Alphonso Davies|Canada|defender|2000|Vancouver, Bayern|Fun fact~Lightning-fast left back born in a refugee camp|alphonso|0
-Luis Diaz|Colombia|winger|1997|Porto, Liverpool|Career twist~Left Porto for Liverpool in 2022|lucho|0
-James Rodriguez|Colombia|midfielder|1991|Porto, Monaco, Real Madrid, Bayern|Honour~Won the Golden Boot at the 2014 World Cup|james|0
+Luis Diaz|Colombia|winger|1997|Porto, Liverpool, Bayern|Career twist~Left Porto for Liverpool in 2022|lucho|0
+James Rodriguez|Colombia|midfielder|1991|Porto, Monaco, Real Madrid, Bayern, Everton, Sao Paulo|Honour~Won the Golden Boot at the 2014 World Cup|james|0
 Edinson Cavani|Uruguay|striker|1987|Palermo, Napoli, PSG, Man United, Boca Juniors|Record~Became PSG's all-time top scorer|edinson|0
-Ronaldo Nazario|Brazil|striker|1976|Cruzeiro, PSV, Barcelona, Inter, Real Madrid, AC Milan|Nickname~O Fenomeno, the phenomenon|r9,fenomeno,nazario|1
-Rivaldo|Brazil|forward|1972|Palmeiras, Deportivo, Barcelona, AC Milan|Iconic moment~Bicycle-kick goal against Valencia in 2001||1
-Romario|Brazil|striker|1966|Vasco, PSV, Barcelona|Honour~Golden Ball at the 1994 World Cup||1
+Ronaldo Nazario|Brazil|striker|1976|Cruzeiro, PSV, Barcelona, Inter, Real Madrid, AC Milan, Corinthians|Nickname~O Fenomeno, the phenomenon|r9,fenomeno,nazario|1
+Rivaldo|Brazil|forward|1972|Corinthians, Palmeiras, Deportivo, Barcelona, AC Milan, Sao Paulo|Iconic moment~Bicycle-kick goal against Valencia in 2001||1
+Romario|Brazil|striker|1966|Vasco, PSV, Barcelona, Flamengo, Fluminense|Honour~Golden Ball at the 1994 World Cup||1
 Lothar Matthaus|Germany|midfielder|1961|Gladbach, Bayern, Inter|Honour~Captained West Germany to the 1990 World Cup|lothar|1
 Gerd Muller|Germany|striker|1945|Bayern|Nickname~Der Bomber|gerd,bomber|1
 Michel Platini|France|midfielder|1955|Nancy, Saint-Etienne, Juventus|Honour~Won three straight Ballon d'Ors|michel|1
@@ -112,52 +112,52 @@ George Best|Northern Ireland|winger|1946|Man United|Honour~Won the 1968 Ballon d
 Eric Cantona|France|forward|1966|Auxerre, Marseille, Leeds, Man United|Iconic moment~The kung-fu kick at Selhurst Park in 1995|eric|1
 Dennis Bergkamp|Netherlands|forward|1969|Ajax, Inter, Arsenal|Fun fact~Famously refused to fly|dennis|1
 Raul|Spain|forward|1977|Real Madrid, Schalke|Record~Was Real Madrid's all-time top scorer for years||1
-Fernando Torres|Spain|striker|1984|Atletico, Liverpool, Chelsea|Nickname~El Nino, the kid|fernando,nino|1
+Fernando Torres|Spain|striker|1984|Atletico, Liverpool, Chelsea, AC Milan|Nickname~El Nino, the kid|fernando,nino|1
 Marcelo|Brazil|defender|1988|Fluminense, Real Madrid|Honour~Won five Champions Leagues with Real Madrid||1
 Ryan Giggs|Wales|winger|1973|Man United|Honour~Won 13 Premier League titles|ryan|1
-Yaya Toure|Ivory Coast|midfielder|1983|Barcelona, Man City|Honour~African Footballer of the Year four years running|yaya|1
+Yaya Toure|Ivory Coast|midfielder|1983|Monaco, Barcelona, Man City|Honour~African Footballer of the Year four years running|yaya|1
 Robinho|Brazil|forward|1984|Santos, Real Madrid, Man City, AC Milan|Known for silky dribbling and step-overs|robinho|1
 Roberto Firmino|Brazil|forward|1991|Figueirense, Hoffenheim, Liverpool, Al-Ahli|Anchored Liverpool's front three as a false nine|firmino,bobby|1
-Philippe Coutinho|Brazil|midfielder|1992|Vasco, Inter, Liverpool, Barcelona, Bayern, Aston Villa|Left Liverpool for Barcelona in 2018|coutinho|1
-Gabriel Jesus|Brazil|forward|1997|Palmeiras, Man City, Arsenal|Moved from Manchester City to Arsenal in 2022|jesus|0
+Philippe Coutinho|Brazil|midfielder|1992|Vasco, Inter, Liverpool, Barcelona, Bayern, Aston Villa, Santos|Left Liverpool for Barcelona in 2018|coutinho|1
+Gabriel Jesus|Brazil|forward|1997|Palmeiras, Man City, Arsenal, Barcelona|Moved from Manchester City to Arsenal in 2022|jesus|0
 Richarlison|Brazil|forward|1997|Fluminense, Watford, Everton, Tottenham|Scored a stunning goal against Serbia at the 2018 World Cup|richarlison|0
 Antony|Brazil|winger|2000|Sao Paulo, Ajax, Man United, Real Betis|Joined Manchester United from Ajax in 2022|antony|0
 Lucas Paqueta|Brazil|midfielder|1997|Flamengo, Lyon, West Ham, AC Milan|Moved from Lyon to West Ham in 2022|paqueta|0
-Ederson|Brazil|goalkeeper|1993|Benfica, Man City|Known for his passing from the back|ederson|0
-Bruno Guimaraes|Brazil|midfielder|1997|Athletico Paranaense, Lyon, Newcastle|Joined Newcastle from Lyon in 2022|guimaraes|0
-Dani Alves|Brazil|defender|1983|Bahia, Sevilla, Barcelona, Juventus, PSG|Won the 2011 Champions League with Barcelona|alves,daniel alves|1
+Ederson|Brazil|goalkeeper|1993|Benfica, Man City, Fenerbahce|Known for his passing from the back|ederson|0
+Bruno Guimaraes|Brazil|midfielder|1997|Athletico Paranaense, Lyon, Newcastle, Arsenal|Joined Newcastle from Lyon in 2022|guimaraes|0
+Dani Alves|Brazil|defender|1983|Bahia, Sevilla, Barcelona, Juventus, PSG, Sao Paulo|Won the 2011 Champions League with Barcelona|alves,daniel alves|1
 Thiago Silva|Brazil|defender|1984|AC Milan, PSG, Chelsea, Fluminense|Long-serving PSG captain|thiago silva|1
-David Luiz|Brazil|defender|1987|Vitoria, Benfica, Chelsea, PSG, Arsenal|Known for long-range free kicks|luiz,david luiz|1
+David Luiz|Brazil|defender|1987|Vitoria, Benfica, Chelsea, PSG, Arsenal, Flamengo|Known for long-range free kicks|luiz,david luiz|1
 Thiago Alcantara|Spain|midfielder|1991|Barcelona, Bayern, Liverpool|Son of former Brazilian midfielder Mazinho|alcantara|1
 Marco Verratti|Italy|midfielder|1992|Pescara, PSG, Al-Arabi|Long-serving PSG midfielder|verratti|1
 Nicolo Barella|Italy|midfielder|1997|Cagliari, Inter|Helped Inter win the 2021 Serie A title|barella|0
 Federico Chiesa|Italy|winger|1997|Fiorentina, Juventus, Liverpool|Joined Liverpool in 2022|chiesa|0
 Ciro Immobile|Italy|striker|1990|Torino, Sevilla, Dortmund, Lazio, Besiktas|Won the Serie A top scorer award in 2020|immobile|1
 Kalidou Koulibaly|Senegal|defender|1991|Napoli, Chelsea, Al-Hilal|Napoli's commanding centre-back before joining Chelsea|koulibaly|1
-Pierre-Emerick Aubameyang|Gabon|striker|1989|Saint-Etienne, Dortmund, Arsenal, Barcelona, Chelsea|Won the Bundesliga top scorer award with Dortmund|aubameyang,auba|1
+Pierre-Emerick Aubameyang|Gabon|striker|1989|Lille, Monaco, Saint-Etienne, Dortmund, Arsenal, Barcelona, Chelsea, Marseille|Won the Bundesliga top scorer award with Dortmund|aubameyang,auba|1
 Mario Gotze|Germany|midfielder|1992|Dortmund, Bayern, PSV, Frankfurt|Scored the winner in the 2014 World Cup final|gotze,gotz|1
-Ilkay Gundogan|Germany|midfielder|1990|Dortmund, Man City, Barcelona|Scored twice in the 2023 Champions League final|gundogan|0
+Ilkay Gundogan|Germany|midfielder|1990|Dortmund, Man City, Barcelona, Galatasaray|Scored twice in the 2023 Champions League final|gundogan|0
 Joshua Kimmich|Germany|midfielder|1995|Stuttgart, Leipzig, Bayern|Bayern midfielder who also plays right-back|kimmich|0
-Leroy Sane|Germany|winger|1996|Schalke, Man City, Bayern|Left Manchester City for Bayern in 2020|sane|0
-Joao Cancelo|Portugal|defender|1994|Benfica, Valencia, Juventus, Man City, Barcelona, Bayern|Known for overlapping from full-back|cancelo|0
+Leroy Sane|Germany|winger|1996|Schalke, Man City, Bayern, Galatasaray|Left Manchester City for Bayern in 2020|sane|0
+Joao Cancelo|Portugal|defender|1994|Benfica, Valencia, Inter, Juventus, Man City, Barcelona, Bayern, Al-Hilal|Known for overlapping from full-back|cancelo|0
 Diogo Jota|Portugal|forward|1996|Porto, Wolves, Liverpool, Atletico|Joined Liverpool from Wolves in 2020|jota|0
 Ruben Neves|Portugal|midfielder|1997|Porto, Wolves, Al-Hilal|Long-range shooter who captained Wolves|neves|0
-Joao Felix|Portugal|forward|1999|Benfica, Atletico, Chelsea, Barcelona|Joined Atletico from Benfica in 2019|felix|0
-Dani Carvajal|Spain|defender|1992|Real Madrid|Real Madrid academy graduate and long-serving right-back|carvajal|1
+Joao Felix|Portugal|forward|1999|Benfica, Atletico, Chelsea, Barcelona, AC Milan|Joined Atletico from Benfica in 2019|felix|0
+Dani Carvajal|Spain|defender|1992|Leverkusen, Real Madrid|Real Madrid academy graduate and long-serving right-back|carvajal|1
 Sergio Busquets|Spain|midfielder|1988|Barcelona, Inter Miami|Barcelona academy graduate and holding midfielder|busquets|1
-Ansu Fati|Spain|winger|2002|Barcelona, Brighton|Became Barcelona's youngest league goalscorer|fati|0
+Ansu Fati|Spain|winger|2002|Barcelona, Brighton, Monaco|Became Barcelona's youngest league goalscorer|fati|0
 Nico Williams|Spain|winger|2002|Athletic Bilbao|Athletic winger who won Euro 2024 with Spain|nico williams|0
 Rodrigo De Paul|Argentina|midfielder|1994|Udinese, Atletico, Inter Miami|Part of Argentina's 2022 World Cup winning squad|de paul,depaul|0
-Emiliano Martinez|Argentina|goalkeeper|1992|Arsenal, Aston Villa|Saved two penalties in the 2022 World Cup final shootout|dibu,emiliano|0
-Gonzalo Higuain|Argentina|striker|1987|River Plate, Real Madrid, Napoli, Juventus, AC Milan, Chelsea|Scored 36 Serie A goals for Napoli in 2015-16|higuain|1
-Carlos Tevez|Argentina|striker|1984|Boca Juniors, Man United, Man City, Juventus, West Ham|Won the 2012 Premier League with Manchester City|tevez|1
+Emiliano Martinez|Argentina|goalkeeper|1992|Arsenal, Wolves, Aston Villa, Chelsea|Saved two penalties in the 2022 World Cup final shootout|dibu,emiliano|0
+Gonzalo Higuain|Argentina|striker|1987|River Plate, Real Madrid, Napoli, Juventus, AC Milan, Chelsea, Inter Miami|Scored 36 Serie A goals for Napoli in 2015-16|higuain|1
+Carlos Tevez|Argentina|striker|1984|Boca Juniors, Corinthians, Man United, Man City, Juventus, West Ham|Won the 2012 Premier League with Manchester City|tevez|1
 Juan Roman Riquelme|Argentina|midfielder|1978|Boca Juniors, Villarreal, Barcelona|Boca legend who ran the midfield with his left foot|riquelme,roman|1
-Sergio Aguero|Argentina|striker|1988|Independiente, Atletico, Man City|Scored the 2012 Premier League winner against QPR|aguero,kun|1
-Javier Mascherano|Argentina|defender|1984|West Ham, Liverpool, Barcelona|Central defender who played for Barcelona and Liverpool|mascherano|1
+Sergio Aguero|Argentina|striker|1988|Independiente, Atletico, Man City, Barcelona|Scored the 2012 Premier League winner against QPR|aguero,kun|1
+Javier Mascherano|Argentina|defender|1984|River Plate, Corinthians, West Ham, Liverpool, Barcelona|Central defender who played for Barcelona and Liverpool|mascherano|1
 Zico|Brazil|midfielder|1953|Flamengo, Udinese, Kashima|Flamengo legend nicknamed the White Pele|zico|1
-Jairzinho|Brazil|winger|1944|Botafogo, Cruzeiro|Scored in every game of the 1970 World Cup|jairzinho|1
-Garrincha|Brazil|winger|1933|Botafogo, Corinthians|Dribbling winger nicknamed the Joy of the People|garrincha|1
-Socrates|Brazil|midfielder|1954|Corinthians, Fiorentina|Doctor who captained Brazil at the 1982 World Cup|socrates|1
+Jairzinho|Brazil|winger|1944|Botafogo, Marseille, Cruzeiro|Scored in every game of the 1970 World Cup|jairzinho|1
+Garrincha|Brazil|winger|1933|Botafogo, Corinthians, Flamengo|Dribbling winger nicknamed the Joy of the People|garrincha|1
+Socrates|Brazil|midfielder|1954|Corinthians, Fiorentina, Flamengo, Santos|Doctor who captained Brazil at the 1982 World Cup|socrates|1
 Bobby Charlton|England|midfielder|1937|Man United|Survived the Munich air disaster and won the 1966 World Cup|charlton,bobby charlton|1
 Gary Lineker|England|striker|1960|Leicester, Everton, Barcelona, Tottenham|Won the 1986 World Cup Golden Boot|lineker|1
 Alan Shearer|England|striker|1970|Southampton, Blackburn, Newcastle|Newcastle's all-time top Premier League scorer|shearer|1
@@ -166,35 +166,35 @@ John Terry|England|defender|1980|Chelsea, Aston Villa, QPR|Long-serving Chelsea 
 Rio Ferdinand|England|defender|1978|West Ham, Leeds, Man United, QPR|Man United centre-back who won several Premier League titles|ferdinand|1
 Paul Scholes|England|midfielder|1974|Man United|One-club midfielder famous for long-range goals|scholes|1
 Roy Keane|Ireland|midfielder|1971|Nottingham Forest, Man United, Celtic|Man United captain known for his leadership|keane|1
-Peter Schmeichel|Denmark|goalkeeper|1963|Brondby, Man United, Sporting, Aston Villa|Won five Premier League titles with Man United|schmeichel|1
+Peter Schmeichel|Denmark|goalkeeper|1963|Brondby, Man United, Sporting, Aston Villa, Man City|Won five Premier League titles with Man United|schmeichel|1
 Oliver Kahn|Germany|goalkeeper|1969|Karlsruher, Bayern|Bayern goalkeeper nicknamed Der Titan|kahn|1
 Andriy Shevchenko|Ukraine|striker|1976|Dynamo Kyiv, AC Milan, Chelsea|Won the 2003 Champions League and the 2004 Ballon d'Or|shevchenko,sheva|1
-Ruud Gullit|Netherlands|midfielder|1962|Feyenoord, PSV, AC Milan, Sampdoria|Won the 1987 Ballon d'Or with AC Milan|gullit|1
+Ruud Gullit|Netherlands|midfielder|1962|Feyenoord, PSV, AC Milan, Sampdoria, Chelsea|Won the 1987 Ballon d'Or with AC Milan|gullit|1
 Marco van Basten|Netherlands|striker|1964|Ajax, AC Milan|Ballon d'Or winner forced to retire by injury|van basten,vanbasten|1
 Hristo Stoichkov|Bulgaria|forward|1966|CSKA Sofia, Barcelona, Parma|Won the 1994 Ballon d'Or|stoichkov|1
-Mario Balotelli|Italy|striker|1990|Inter, Man City, Liverpool, AC Milan|Famous for the question why always me|balotelli|1
-Jorginho|Italy|midfielder|1991|Napoli, Chelsea, Arsenal|Scored the decisive shootout penalty for Italy at Euro 2020|jorginho|0
+Mario Balotelli|Italy|striker|1990|Inter, Man City, Liverpool, AC Milan, Marseille|Famous for the question why always me|balotelli|1
+Jorginho|Italy|midfielder|1991|Napoli, Chelsea, Arsenal, Flamengo|Scored the decisive shootout penalty for Italy at Euro 2020|jorginho|0
 Jules Kounde|France|defender|1998|Sevilla, Barcelona|Joined Barcelona from Sevilla in 2022|kounde|0
 Aurelien Tchouameni|France|midfielder|2000|Monaco, Real Madrid|Joined Real Madrid from Monaco in 2022|tchouameni|0
 Eduardo Camavinga|France|midfielder|2002|Rennes, Real Madrid|Joined Real Madrid from Rennes in 2021|camavinga|0
-Theo Hernandez|France|defender|1997|Real Madrid, Atletico, AC Milan|Attacking left-back for AC Milan|theo|0
+Theo Hernandez|France|defender|1997|Real Madrid, Atletico, Real Sociedad, AC Milan, Al-Hilal|Attacking left-back for AC Milan|theo|0
 William Saliba|France|defender|2001|Saint-Etienne, Marseille, Arsenal|Arsenal centre-back|saliba|0
 Marcus Thuram|France|striker|1997|Gladbach, Inter|Son of a France World Cup-winning defender|thuram|0
 Dele Alli|England|midfielder|1996|MK Dons, Tottenham, Everton|Scored a lot of goals early in his Tottenham career|dele|1
 Harry Maguire|England|defender|1993|Hull, Leicester, Man United|Captained Man United|maguire|0
-Jordan Henderson|England|midfielder|1990|Sunderland, Liverpool, Al-Ettifaq|Liverpool captain who lifted the 2019 Champions League|henderson|1
-Raheem Sterling|England|winger|1994|QPR, Liverpool, Man City, Chelsea|Left Liverpool for Manchester City in 2015|sterling|1
-Kyle Walker|England|defender|1990|Sheffield United, Tottenham, Man City|Man City right-back in the 2023 treble season|walker|0
-John Stones|England|defender|1994|Everton, Man City|City centre-back in the 2023 treble season|stones|0
-Alexander Isak|Sweden|striker|1999|Real Sociedad, Newcastle|Joined Newcastle in 2022 for a club record fee|isak|0
+Jordan Henderson|England|midfielder|1990|Sunderland, Liverpool, Al-Ettifaq, Ajax, Chelsea|Liverpool captain who lifted the 2019 Champions League|henderson|1
+Raheem Sterling|England|winger|1994|QPR, Liverpool, Man City, Chelsea, Arsenal|Left Liverpool for Manchester City in 2015|sterling|1
+Kyle Walker|England|defender|1990|Sheffield United, Tottenham, QPR, Aston Villa, Man City, AC Milan|Man City right-back in the 2023 treble season|walker|0
+John Stones|England|defender|1994|Everton, Man City, Inter|City centre-back in the 2023 treble season|stones|0
+Alexander Isak|Sweden|striker|1999|Dortmund, Real Sociedad, Newcastle, Liverpool|Joined Newcastle in 2022 for a club record fee|isak|0
 Dusan Vlahovic|Serbia|striker|2000|Fiorentina, Juventus|Joined Juventus from Fiorentina in 2022|vlahovic|0
 Youssef En-Nesyri|Morocco|striker|1997|Malaga, Sevilla, Fenerbahce|Scored Morocco's winner against Portugal at the 2022 World Cup|nesyri,en-nesyri|0
 Hakim Ziyech|Morocco|winger|1993|Twente, Ajax, Chelsea, PSG, Galatasaray|Ajax winger in their 2019 Champions League run|ziyech|1
 Edouard Mendy|Senegal|goalkeeper|1992|Rennes, Chelsea|Chelsea goalkeeper in their 2021 Champions League win|mendy|1
-Thomas Partey|Ghana|midfielder|1993|Atletico, Arsenal|Arsenal midfielder who joined from Atletico|partey|0
-Jay-Jay Okocha|Nigeria|midfielder|1973|Frankfurt, Bolton|Skilful playmaker who became a Bolton favourite|okocha,jay jay|1
+Thomas Partey|Ghana|midfielder|1993|Atletico, Arsenal, Villarreal|Arsenal midfielder who joined from Atletico|partey|0
+Jay-Jay Okocha|Nigeria|midfielder|1973|Frankfurt, Fenerbahce, PSG, Bolton|Skilful playmaker who became a Bolton favourite|okocha,jay jay|1
 Nwankwo Kanu|Nigeria|striker|1976|Ajax, Inter, Arsenal, West Brom|Won Olympic gold with Nigeria in 1996|kanu|1
-Michael Essien|Ghana|midfielder|1982|Chelsea, Real Madrid, AC Milan|Powerful midfielder who won the Premier League with Chelsea|essien|1
+Michael Essien|Ghana|midfielder|1982|Lyon, Chelsea, Real Madrid, AC Milan|Powerful midfielder who won the Premier League with Chelsea|essien|1
 Asamoah Gyan|Ghana|striker|1985|Rennes, Sunderland, Al-Ain|Missed a penalty in the 2010 World Cup quarter-final against Uruguay|gyan|1
 Clarence Seedorf|Netherlands|midfielder|1976|Ajax, Real Madrid, Sampdoria, Inter, AC Milan|Won four Champions Leagues with three clubs|seedorf|1
 Wesley Sneijder|Netherlands|midfielder|1984|Ajax, Real Madrid, Inter, Galatasaray|Won the 2010 treble with Inter|sneijder|1
@@ -202,91 +202,91 @@ Shinji Kagawa|Japan|midfielder|1989|Cerezo Osaka, Dortmund, Man United, Real Zar
 Park Ji-sung|South Korea|midfielder|1981|PSV, Man United, QPR|Won the 2008 Champions League with Man United|park ji sung|1
 Diego Forlan|Uruguay|striker|1979|Independiente, Villarreal, Atletico, Man United, Inter|Won the Golden Ball at the 2010 World Cup|forlan|1
 Javier Zanetti|Argentina|defender|1973|Talleres, Inter|Captained Inter for years and played over 800 games for them|zanetti|1
-Gabriel Batistuta|Argentina|striker|1969|Newell's Old Boys, River Plate, Boca Juniors, Fiorentina, Roma|Fiorentina legend nicknamed Batigol|batistuta,batigol|1
+Gabriel Batistuta|Argentina|striker|1969|Newell's Old Boys, River Plate, Boca Juniors, Fiorentina, Roma, Inter|Fiorentina legend nicknamed Batigol|batistuta,batigol|1
 Mauro Icardi|Argentina|striker|1993|Sampdoria, Inter, PSG, Galatasaray|Inter striker who captained the club|icardi|0
 Willian|Brazil|winger|1988|Chelsea, Arsenal, Corinthians|Long-serving Chelsea winger|willian|1
-Ivan Rakitic|Croatia|midfielder|1988|Schalke, Sevilla, Barcelona|Croatian midfielder in Barcelona's 2015 Champions League win|rakitic|1
-Ivan Perisic|Croatia|winger|1989|Hajduk Split, Wolfsburg, Inter, Bayern, Tottenham|Won the 2020 Champions League with Bayern|perisic|1
+Ivan Rakitic|Croatia|midfielder|1988|Basel, Schalke, Sevilla, Barcelona|Croatian midfielder in Barcelona's 2015 Champions League win|rakitic|1
+Ivan Perisic|Croatia|winger|1989|Hajduk Split, Dortmund, Wolfsburg, Inter, Bayern, Tottenham, PSV|Won the 2020 Champions League with Bayern|perisic|1
 Rafael Marquez|Mexico|defender|1979|Barcelona, Monaco, Hamburg, Lyon, Villarreal|Mexican defender who played for Barcelona|marquez,rafa|1
 Hirving Lozano|Mexico|winger|1995|PSV, Napoli, San Diego|Scored against Germany at the 2018 World Cup|lozano,chucky|1
-Javier Hernandez|Mexico|striker|1988|Man United, Real Madrid, Leverkusen, West Ham|Scored many goals for Man United as Chicharito|chicharito|1
-Memphis Depay|Netherlands|forward|1994|PSV, Man United, Lyon, Barcelona, Atletico|Netherlands forward who played for Man United and Barcelona|depay,memphis|0
+Javier Hernandez|Mexico|striker|1988|Man United, Real Madrid, Leverkusen, West Ham, Sevilla|Scored many goals for Man United as Chicharito|chicharito|1
+Memphis Depay|Netherlands|forward|1994|PSV, Man United, Lyon, Barcelona, Atletico, Corinthians|Netherlands forward who played for Man United and Barcelona|depay,memphis|0
 Pedro Neto|Portugal|winger|2000|Wolves, Chelsea|Joined Chelsea from Wolves in 2024|neto|0
-Alejandro Garnacho|Argentina|winger|2004|Man United|Came through Manchester United's academy as a winger|garnacho|0
-Ferran Torres|Spain|winger|2000|Valencia, Man City, Barcelona|Joined Barcelona from Manchester City in 2022|ferran|0
+Alejandro Garnacho|Argentina|winger|2004|Man United, Chelsea, Aston Villa|Came through Manchester United's academy as a winger|garnacho|0
+Ferran Torres|Spain|winger|2000|Valencia, Man City, Barcelona, PSG|Joined Barcelona from Manchester City in 2022|ferran|0
 Dani Olmo|Spain|midfielder|1998|Dinamo Zagreb, Leipzig, Barcelona|Joined Barcelona from Leipzig in 2022|olmo|0
 Mikel Oyarzabal|Spain|forward|1997|Real Sociedad|Scored the winner in the 2024 European Championship final|oyarzabal|0
-Wilfried Zaha|Ivory Coast|winger|1992|Crystal Palace, Man United|Crystal Palace winger known for his dribbling|zaha|1
+Wilfried Zaha|Ivory Coast|winger|1992|Crystal Palace, Man United, Galatasaray, Lyon|Crystal Palace winger known for his dribbling|zaha|1
 Kobbie Mainoo|England|midfielder|2005|Man United|Broke into Manchester United's first team as a teenager|mainoo|0
-Marcus Rashford|England|forward|1997|Man United|Man United academy forward who campaigned for free school meals|rashford|1
-Jadon Sancho|England|winger|2000|Man City, Dortmund, Man United|Joined Manchester United from Dortmund in 2021|sancho|0
+Marcus Rashford|England|forward|1997|Man United, Aston Villa, Barcelona|Man United academy forward who campaigned for free school meals|rashford|1
+Jadon Sancho|England|winger|2000|Man City, Dortmund, Man United, Chelsea, Aston Villa|Joined Manchester United from Dortmund in 2021|sancho|0
 Mason Mount|England|midfielder|1999|Chelsea, Man United|Chelsea academy midfielder who joined Manchester United in 2023|mount|0
-Ollie Watkins|England|striker|1995|Exeter, Brentford, Aston Villa|Aston Villa striker who spent years at Brentford|watkins|0
+Ollie Watkins|England|striker|1995|Exeter, Brentford, Aston Villa, Al-Hilal|Aston Villa striker who spent years at Brentford|watkins|0
 Dominik Szoboszlai|Hungary|midfielder|2000|Salzburg, Leipzig, Liverpool|Joined Liverpool from Leipzig in 2023|szoboszlai|0
-Khvicha Kvaratskhelia|Georgia|winger|2001|Dinamo Batumi, Rubin Kazan, Napoli|Napoli winger who helped them win Serie A in 2023|kvaratskhelia,kvara|0
-Sandro Tonali|Italy|midfielder|2000|Brescia, AC Milan, Newcastle|Joined Newcastle from Milan in 2023|tonali|0
+Khvicha Kvaratskhelia|Georgia|winger|2001|Dinamo Batumi, Rubin Kazan, Napoli, PSG|Napoli winger who helped them win Serie A in 2023|kvaratskhelia,kvara|0
+Sandro Tonali|Italy|midfielder|2000|Brescia, AC Milan, Newcastle, Tottenham|Joined Newcastle from Milan in 2023|tonali|0
 Cody Gakpo|Netherlands|forward|1999|PSV, Liverpool|Joined Liverpool from PSV in 2023|gakpo|0
-Matthijs de Ligt|Netherlands|defender|1999|Ajax, Juventus, Bayern|Ajax captain who later moved to Juventus|de ligt,deligt|0
-Denzel Dumfries|Netherlands|defender|1996|PSV, Inter|Inter wing-back known for his power|dumfries|0
-Kingsley Coman|France|winger|1996|PSG, Bayern|Scored the winner in the 2020 Champions League final|coman|0
-Dayot Upamecano|France|defender|1998|Leipzig, Bayern|Joined Bayern from Leipzig in 2021|upamecano|0
+Matthijs de Ligt|Netherlands|defender|1999|Ajax, Juventus, Bayern, Man United|Ajax captain who later moved to Juventus|de ligt,deligt|0
+Denzel Dumfries|Netherlands|defender|1996|PSV, Inter, Real Madrid|Inter wing-back known for his power|dumfries|0
+Kingsley Coman|France|winger|1996|PSG, Juventus, Bayern|Scored the winner in the 2020 Champions League final|coman|0
+Dayot Upamecano|France|defender|1998|Salzburg, Leipzig, Bayern|Joined Bayern from Leipzig in 2021|upamecano|0
 Lucas Hernandez|France|defender|1996|Atletico, Bayern, PSG|Part of France's 2018 World Cup winning squad|lucas hernandez|1
-Dimitri Payet|France|winger|1987|Nantes, Marseille, West Ham|Known for his free kicks and his time at Marseille|payet|1
+Dimitri Payet|France|winger|1987|Nantes, Saint-Etienne, Lille, Marseille, West Ham|Known for his free kicks and his time at Marseille|payet|1
 Raphael Varane|France|defender|1993|Lens, Real Madrid, Man United|Won four Champions Leagues with Real Madrid|varane|1
-Yann Sommer|Switzerland|goalkeeper|1988|Gladbach, Inter|Inter goalkeeper known for his penalty saves|sommer|0
+Yann Sommer|Switzerland|goalkeeper|1988|Basel, Gladbach, Bayern, Inter|Inter goalkeeper known for his penalty saves|sommer|0
 Granit Xhaka|Switzerland|midfielder|1992|Basel, Gladbach, Arsenal, Leverkusen|Former Arsenal captain|xhaka|0
 Serge Gnabry|Germany|winger|1995|Werder Bremen, Arsenal, Bayern|Bayern winger who scored in the 2020 Champions League run|gnabry|0
 Antonio Rudiger|Germany|defender|1993|Stuttgart, Roma, Chelsea, Real Madrid|Joined Real Madrid after leaving Chelsea|rudiger|0
 Lorenzo Pellegrini|Italy|midfielder|1996|Roma|Roma midfielder and long-serving captain|pellegrini|0
-Alessandro Bastoni|Italy|defender|1999|Inter|Inter defender known for his passing|bastoni|0
-Federico Dimarco|Italy|defender|1997|Inter|Inter wing-back known for his crossing|dimarco|0
+Alessandro Bastoni|Italy|defender|1999|Inter, Parma|Inter defender known for his passing|bastoni|0
+Federico Dimarco|Italy|defender|1997|Inter, Parma|Inter wing-back known for his crossing|dimarco|0
 Pau Cubarsi|Spain|defender|2007|Barcelona|Barcelona centre-back who broke into the first team at 16|cubarsi,pau|0
 Warren Zaire-Emery|France|midfielder|2006|PSG|PSG academy midfielder who made his debut at 16|zaire emery,zaire,warren|0
 Jeremy Doku|Belgium|winger|2002|Anderlecht, Rennes, Man City|Dribbling winger who joined Man City from Rennes in 2023|doku|0
 Nuno Mendes|Portugal|defender|2002|Sporting, PSG|Left-back who moved from Sporting to PSG|mendes,nuno|0
 Joao Neves|Portugal|midfielder|2004|Benfica, PSG|Midfielder who joined PSG from Benfica in 2024|neves|0
-Bradley Barcola|France|winger|2002|Lyon, PSG|Winger who joined PSG from Lyon in 2023|barcola|0
+Bradley Barcola|France|winger|2002|Lyon, PSG, Liverpool|Winger who joined PSG from Lyon in 2023|barcola|0
 Desire Doue|France|winger|2005|Rennes, PSG|Scored twice in PSG's 5-0 Champions League final win in 2025|doue|0
 Michael Olise|France|winger|2001|Reading, Crystal Palace, Bayern|Winger who joined Bayern Munich from Crystal Palace in 2024|olise|0
 Alejandro Balde|Spain|defender|2003|Barcelona|Quick left-back from Barcelona's La Masia academy|balde|0
 Martin Zubimendi|Spain|midfielder|1999|Real Sociedad, Arsenal|Defensive midfielder who left Real Sociedad for Arsenal in 2025|zubimendi|0
 Viktor Gyokeres|Sweden|striker|1998|Brighton, Coventry, Sporting, Arsenal|Prolific Sporting striker who joined Arsenal in 2025|gyokeres,gyokeres viktor|0
 Benjamin Sesko|Slovenia|striker|2003|Salzburg, Leipzig, Man United|Tall Slovenian striker who joined Man United from Leipzig in 2025|sesko|0
-Endrick|Brazil|striker|2006|Palmeiras, Real Madrid|Joined Real Madrid from Palmeiras in 2024 as a teenager||0
+Endrick|Brazil|striker|2006|Palmeiras, Real Madrid, Lyon|Joined Real Madrid from Palmeiras in 2024 as a teenager||0
 Estevao|Brazil|winger|2007|Palmeiras, Chelsea|Brazilian teen winger who joined Chelsea in 2025|estevao willian,willian estevao|0
 Kaoru Mitoma|Japan|winger|1997|Kawasaki Frontale, Union SG, Brighton|His cross that stayed in by millimetres helped Japan beat Spain in 2022|mitoma|0
-Takefusa Kubo|Japan|winger|2001|FC Tokyo, Real Madrid, Real Sociedad|Former Barcelona youth player who joined Real Sociedad in 2022|kubo,take|0
-Ronald Araujo|Uruguay|defender|1999|Boston River, Barcelona|Uruguayan centre-back who joined Barcelona's B team from Boston River|araujo|0
-Marc Cucurella|Spain|defender|1998|Barcelona, Getafe, Brighton, Chelsea|Left-back who won Euro 2024 with Spain|cucurella|0
+Takefusa Kubo|Japan|winger|2001|FC Tokyo, Real Madrid, Villarreal, Real Sociedad|Former Barcelona youth player who joined Real Sociedad in 2022|kubo,take|0
+Ronald Araujo|Uruguay|defender|1999|Boston River, Barcelona, Liverpool|Uruguayan centre-back who joined Barcelona's B team from Boston River|araujo|0
+Marc Cucurella|Spain|defender|1998|Barcelona, Getafe, Brighton, Chelsea, Real Madrid|Left-back who won Euro 2024 with Spain|cucurella|0
 James Maddison|England|midfielder|1996|Coventry, Norwich, Leicester, Tottenham|Playmaker who joined Tottenham from Leicester in 2023|maddison|0
 Eberechi Eze|England|midfielder|1998|QPR, Crystal Palace, Arsenal|Won the 2025 FA Cup with Crystal Palace|eze,ebere|0
-Gabriel Martinelli|Brazil|winger|2001|Ituano, Arsenal|Joined Arsenal from Ituano in 2019|martinelli,gabi martinelli|0
+Gabriel Martinelli|Brazil|winger|2001|Ituano, Arsenal, Al-Hilal|Joined Arsenal from Ituano in 2019|martinelli,gabi martinelli|0
 Gabriel Magalhaes|Brazil|defender|1997|Avai, Lille, Arsenal|Centre-back who joined Arsenal from Lille in 2020|magalhaes|0
 Moises Caicedo|Ecuador|midfielder|2001|Independiente del Valle, Brighton, Chelsea|Joined Chelsea in 2023 for a British record fee|caicedo|0
 Federico Valverde|Uruguay|midfielder|1998|Penarol, Real Madrid|Uruguayan midfielder at Real Madrid since 2016|valverde,fede|0
 Jeremie Frimpong|Netherlands|defender|2000|Celtic, Leverkusen, Liverpool|Won the unbeaten Bundesliga title with Leverkusen in 2024|frimpong|0
 Kenan Yildiz|Turkey|winger|2005|Bayern, Juventus|Took Juventus' No. 10 shirt as a teenager|yildiz|0
 Arda Guler|Turkey|midfielder|2005|Fenerbahce, Real Madrid|Scored a stunning long-range goal on his Euro 2024 debut|guler|0
-Savinho|Brazil|winger|2004|Atletico Mineiro, Girona, Man City|Joined Man City in 2024 after a loan at Girona||0
+Savinho|Brazil|winger|2004|Atletico Mineiro, PSV, Girona, Man City, Tottenham|Joined Man City in 2024 after a loan at Girona||0
 Nico Paz|Argentina|midfielder|2004|Real Madrid, Como|Real Madrid academy midfielder who starred on loan at Como|paz|0
 Riccardo Calafiori|Italy|defender|2002|Roma, Basel, Bologna, Arsenal|Joined Arsenal from Bologna in 2024 after Euro 2024|calafiori|0
-Nicolas Jackson|Senegal|striker|2001|Villarreal, Chelsea|Joined Chelsea from Villarreal in 2023|jackson|0
+Nicolas Jackson|Senegal|striker|2001|Villarreal, Chelsea, Bayern, Aston Villa|Joined Chelsea from Villarreal in 2023|jackson|0
 Josko Gvardiol|Croatia|defender|2002|Dinamo Zagreb, Leipzig, Man City|Wore a protective mask at the 2022 World Cup|gvardiol|0
 Dejan Kulusevski|Sweden|forward|2000|Parma, Juventus, Tottenham|Joined Tottenham from Juventus in 2022|kulusevski|0
 Mike Maignan|France|goalkeeper|1995|Lille, AC Milan|Replaced Donnarumma at AC Milan in 2021|maignan|0
 Jan Oblak|Slovenia|goalkeeper|1993|Benfica, Atletico|Slovenian goalkeeper who joined Atletico from Benfica in 2014|oblak|0
-Franco Mastantuono|Argentina|midfielder|2007|River Plate, Real Madrid|Joined Real Madrid from River Plate in 2025 aged 18|mastantuono|0
-Lee Kang-in|South Korea|midfielder|2001|Valencia, Mallorca, PSG|Joined PSG from Mallorca in 2023|lee,kang in|0
+Franco Mastantuono|Argentina|midfielder|2007|River Plate, Real Madrid, Fiorentina|Joined Real Madrid from River Plate in 2025 aged 18|mastantuono|0
+Lee Kang-in|South Korea|midfielder|2001|Valencia, Mallorca, PSG, Atletico|Joined PSG from Mallorca in 2023|lee,kang in|0
 Marquinhos|Brazil|defender|1994|Corinthians, Roma, PSG|Auto~Brazil defender, born 1994.|marcos aoas correa|0
 Vitinha|Portugal|midfielder|2000|Porto, Wolves, PSG|Auto~Portugal midfielder, born 2000.|vitor ferreira|0
-Hatem Ben Arfa|France|winger|1987|Lyon, Marseille, Newcastle, Nice, PSG|Auto~France winger, born 1987.|ben arfa|1
+Hatem Ben Arfa|France|winger|1987|Lyon, Marseille, Newcastle, Nice, PSG, Rennes|Auto~France winger, born 1987.|ben arfa|1
 Adrien Rabiot|France|midfielder|1995|PSG, Juventus, Marseille, AC Milan|Auto~France midfielder, born 1995.|rabiot|0
 Jonathan David|Canada|forward|2000|Gent, Lille, Juventus, Atletico|Auto~Canada forward, born 2000.||0
-Randal Kolo Muani|France|forward|1998|Nantes, Frankfurt, PSG, Juventus|Auto~France forward, born 1998.|kolo muani|0
-David Ginola|France|winger|1967|PSG, Newcastle, Tottenham, Aston Villa|Auto~France winger, born 1967.|ginola|1
+Randal Kolo Muani|France|forward|1998|Nantes, Frankfurt, PSG, Juventus, Tottenham|Auto~France forward, born 1998.|kolo muani|0
+David Ginola|France|winger|1967|PSG, Newcastle, Tottenham, Aston Villa, Everton|Auto~France winger, born 1967.|ginola|1
 Pauleta|Portugal|forward|1973|Deportivo, Bordeaux, PSG|Auto~Portugal forward, born 1973.|pedro pauleta|1
 Jean-Pierre Papin|France|forward|1963|Marseille, AC Milan, Bayern, Bordeaux|Auto~France forward, born 1963. Ballon d'Or winner.|papin|1
-Gheorghe Hagi|Romania|midfielder|1965|Steaua, Real Madrid, Brescia, Galatasaray|Auto~Romania midfielder, born 1965.|hagi|1
+Gheorghe Hagi|Romania|midfielder|1965|Steaua, Real Madrid, Brescia, Barcelona, Galatasaray|Auto~Romania midfielder, born 1965.|hagi|1
 Rivelino|Brazil|midfielder|1946|Corinthians, Fluminense, Al-Hilal|Auto~Brazil midfielder, born 1946.|rivellino|1
 Carlos Alberto|Brazil|defender|1944|Fluminense, Santos, Flamengo, New York Cosmos|Auto~Brazil defender, born 1944.|carlos alberto torres|1
 Enzo Francescoli|Uruguay|midfielder|1961|River Plate, Marseille, Torino, Cagliari|Auto~Uruguay midfielder, born 1961.|francescoli|1

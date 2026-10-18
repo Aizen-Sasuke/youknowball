@@ -48,7 +48,8 @@ implausible age for retirement). Nationality, position and club-history differen
 contested nationalities, coarse position buckets and loan/youth-club clutter are judgement calls.
 Birth-year corrections are applied only for an unambiguous match that disagrees with ours (this run
 found none — the curated years already matched Wikidata). Every reported value carries the source
-QID and property.
+QID and property. A reviewed subset of the club history can be applied with the separate
+`sync_clubs.py` step below.
 
 ### Why the Action API, not SPARQL
 
@@ -90,6 +91,31 @@ clues and the Grid stay consistent; add a token to `CLUB_QID` (and pick a short,
 when a genuinely new club is needed.
 
 After adding rows, re-run `enrich_players.py` so the new players get `CURRENT`/`DATA_UPDATED` entries.
+
+## Sync club lists (`sync_clubs.py`)
+
+The Grid, the Career-path clues, the player card and Wordle's "Shared club" column all read the
+curated `clubs` field of a row. That field lists a player's *notable* clubs, so it drifts: after a
+transfer window a player can be missing a club fans will type into the Grid, and the Grid then refuses
+a correct answer. `sync_clubs.py` re-derives each row's senior club history from `data/enrich.json`
+and adds the clubs the row is missing, keeping it consistent with the `CURRENT` data:
+
+    python sync_clubs.py            # dry run: report the changes (data/club-sync-report.csv)
+    python sync_clubs.py --apply    # patch the clubs field in js/data.js
+
+The rules are deliberately conservative:
+
+- only clubs that are already canonical tokens in the deck are added, so the vocabulary and the Grid
+  rows stay stable;
+- youth, reserve, "B"/"II" and academy sides and Olympic/national teams are skipped, as are a short
+  hand-reviewed list of youth-only spells at clubs that *do* have a token (`MANUAL_EXCLUDE`);
+- nothing is ever removed, and each added club is inserted at its chronological position (by its
+  Wikidata start date) so the Career-path clues still read as a career;
+- every added club is a `P54` statement on the player's own Wikidata item, listed with its start year
+  in `data/club-sync-report.csv`.
+
+`data/club-sync-report.csv` is a working file (gitignored); the committed artefact is the updated
+`clubs` field in `js/data.js`.
 
 ## Known limits
 
