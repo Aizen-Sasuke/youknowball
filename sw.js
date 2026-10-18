@@ -1,15 +1,16 @@
 /* YouKnowBall service worker — cache the app shell for offline play.
    Small on purpose: no routing tricks, only GET, always fall back to network. */
-const VER = "ykb-v13";
+const VER = "ykb-v14";
+const XV = "14";
 const SHELL = [
   "./",
   "index.html",
   "404.html",
   "config.js",
-  "css/main.css?v=13",
-  "js/data.js?v=13",
-  "js/fx.js?v=13",
-  "js/app.js?v=13",
+  "css/main.css?v=" + XV,
+  "js/data.js?v=" + XV,
+  "js/fx.js?v=" + XV,
+  "js/app.js?v=" + XV,
   "manifest.webmanifest",
   "icon.svg",
   "icon-192.png",

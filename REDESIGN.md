@@ -32,4 +32,13 @@
 - Since v12.1 `flipList` skips the rebuild when the markup is identical (hostTick's once-per-second tick no longer churns `#obd`), and score numbers in it tween via `tweenNum` (`data-to`/`data-from` with the previous DOM value).
 - No separate "Reveal" action exists in JS: Skip to next clue = reveal next; Give up = reveal answer.
 - Since v12.1: `setErr(id,msg)` writes through to a toast when the error element is missing instead of throwing; `cp()` falls back to a hidden execCommand copy on non-secure origins and restores its label; a guard in `start()`/`hostStart()` shows an error instead of crashing when a pool filter yields zero players.
-- Small additive JS (display only): `S.nk`, `S.sk` for fresh-clue and streak-tab detection, share grid in end screen and copied text, `fit()`, `flipList()`, `pulse()`.
+Small additive JS (display only): `S.nk`, `S.sk` for fresh-clue and streak-tab detection, share grid in end screen and copied text, `fit()`, `flipList()`, `pulse()`.
+
+## v14 additions
+- Seedable rounds: the existing `hs()`/`rnd()` PRNG is now driven by a challenge code from the URL (`?seed=abc123&m=c|p|s|w|g`, plus `r`/`j`/`p`/`gd` options). Same seed + options = identical rounds everywhere. Daily already used this mechanism with the date as the seed; links can now also open a dated Daily directly (`?d=YYYY-MM-DD`).
+- `chBanner()` renders a slim full-bleed challenge bar on setup/play/end/wordle/grid cards while a challenge is armed; "Create your own" (`#cown`, delegated click) disarms it without touching history.
+- "Challenge a friend" on end screens (`chLink()`/`challenge()`): copies/shares a link reproducing the round set; with no armed challenge it mints a fresh seed (= a rematch with the same settings, not a replay of the finished rounds).
+- Online rooms host a "Room seed" input (`cfg.rs`); `hostStart()` seeds the deck with it when set. Room-to-room identity, not needed for same-room fairness (the host already drives every peer's deck).
+- Behaviour notes: (1) opening a challenge link auto-starts that game (additive — only when the URL has a valid `?seed`); (2) while a challenge is armed, every Classic/Solo/Career start and every Wordle "Random puzzle" uses the challenge seed, and Grid boards are seeded too; (3) a challenge Classic with no saved names stores one "You" player in `cfg.names`.
+- Latent bug fixed: the boot IIFE (line 218) re-renders setup synchronously mid-file, so reloading with a saved Grid mode hit `GDN`/`GDD`/`gbest` before their declaration (TDZ crash, recovered only by a later re-render). Those constants now live above the boot IIFE.
+- Cache: `sw.js` asset list is built from one `XV` const (+ `VER`) so future bumps are one line. This push = `ykb-v14`.

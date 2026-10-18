@@ -75,6 +75,13 @@ h3:before{content:"";flex:none;width:10px;height:.95em;background:var(--ink);tra
 .mdesc{margin:0 0 26px;max-width:60ch;font-size:17px}
 .lab{display:block;margin-bottom:6px;font:700 13px var(--fd);letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
 .err{min-height:22px;margin:12px 0 18px;color:var(--bad);font-size:15px;font-weight:600}
+
+/* challenge banner (slim full-bleed bar pinned to the card top) */
+.chban{display:flex;align-items:center;gap:12px;margin:-28px calc(var(--pad)*-1) 20px;padding:10px 14px 10px var(--pad);background:var(--ink);color:var(--it);font:700 15px var(--fd);letter-spacing:.14em;text-transform:uppercase}
+.chban b{letter-spacing:.22em;white-space:nowrap}
+.chban .gh{margin-left:auto;flex:0 0 auto;min-height:36px;padding:0 12px;font:700 13px var(--fd);letter-spacing:.1em;color:var(--it);background:transparent;border:2px solid var(--it);border-radius:3px;cursor:pointer}
+@media(hover:hover){.chban .gh:hover{opacity:.75}}
+@media(min-width:720px){.chban{margin-top:-40px}}
 .ost{min-height:0;margin:10px 0 0;font-size:14px;color:var(--bad)}
 .ost:empty{display:none}
 

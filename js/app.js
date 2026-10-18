@@ -27,8 +27,26 @@ let cfg={mode:"c",R:10,T:20,pool:"x",names:[],teams:false,pen:true,ac:false,snd:
 let ST={g:0,solved:0,best:0,fast:0,ds:0,daily:{}};
 try{Object.assign(cfg,JSON.parse(localStorage.getItem("ykb")||"{}"));Object.assign(ST,JSON.parse(localStorage.getItem("ykbs")||"{}"))}catch(e){}
 const INV=(new URLSearchParams(location.search).get("room")||"").toLowerCase(),invOk=/^[a-z0-9]{6}$/.test(INV);if(invOk)cfg.mode="o";
+/* Challenge links: ?seed=abc123&m=c|p|s|w|g[&r=rounds|&j=solo run][&gd=grid difficulty][&p=pool][&d=YYYY-MM-DD]
+   ?seed (with a challengeable mode) arms a challenge: deterministic deck + clue order via the js/hash PRNG.
+   Daily is unified on the same mechanism already: its seed IS the date (reproducible offline). */
+const QP=new URLSearchParams(location.search);
+const SEEDQ=(QP.get("seed")||"").toLowerCase(),SEEDOK=/^[a-z0-9]{6}$/.test(SEEDQ);
+const MODEQ=(QP.get("m")||"").toLowerCase(),MODEOK=["c","p","s","w","g"].includes(MODEQ);
+let CH=null;
+const DAILYQ=QP.get("d")||"",DAILYOK=/^\d{4}-\d{2}-\d{2}$/.test(DAILYQ);
+/* grid stats labels live up here: the boot IIFE below re-renders setup synchronously,
+   and a saved Grid mode would otherwise hit these before their declaration (TDZ). */
+const GDN={e:"Easy",m:"Medium",h:"Hard"},GDD={e:"Big clubs and common nations. Every box has 3 or more answers.",m:"Mid-size clubs. Every box has 2 or more answers.",h:"Any club, rare pairings. Some boxes have just one answer."};
+const gbest=d=>(ST.gbd&&ST.gbd[d])||(d==="m"?ST.gb||0:0);
 const save=()=>{try{localStorage.setItem("ykb",JSON.stringify(cfg))}catch(e){}};
 const sv=()=>{try{localStorage.setItem("ykbs",JSON.stringify(ST))}catch(e){}};
+if(SEEDOK&&MODEOK){CH={code:SEEDQ};cfg.mode=MODEQ;
+  if(MODEQ==="s"){const j=+QP.get("j")||0;if([10,20,99].includes(j))cfg.sr=j}
+  else{const r=+QP.get("r")||0;if([5,10,15,20,99].includes(r))cfg.R=r}
+  const gd=QP.get("gd");if(MODEQ==="g"&&["e","m","h"].includes(gd))cfg.gd=gd;
+  const pl=QP.get("p");if(["x","0","1","PL","LL","SA","BL","L1"].includes(pl))cfg.pool=pl;
+  if(!cfg.names.length)cfg.names=["You"];save()}
 let S={ph:"setup"},iv=null,left=0,ax=null,enter=true;
 // Decorative confetti is intentionally not rendered (CSS keeps it hidden).
 const HIDE_CONFETTI=true;
@@ -65,6 +83,18 @@ return h}
 const pts=()=>Math.max(1,6-S.sh-(S.hl?1:0));
 const tm=k=>S.pl.filter((_,i)=>i%2===k).reduce((a,x)=>a+x.s,0);
 const grid=r=>r.map(x=>x===0?"⬛":x<=2?"🟩":x<=4?"🟨":"🟧").join("");
+/* challenge helpers: the armed challenge drives the PRNG; a link reproduces the same round set */
+const chSeedCode=()=>"YKBCH"+CH.code;
+function chBanner(){if(!CH)return"";return '<div class="chban" role="note"><span>You are playing a challenge</span><b>Seed '+esc(CH.code.toUpperCase())+'</b><button class="gh" type="button" id="cown">Create your own</button></div>'}
+function chLink(code,mm){mm=mm||cfg.mode;const q=new URLSearchParams();
+ q.set("seed",code);q.set("m",mm);
+ if(mm==="s")q.set("j",String(cfg.sr||10));else if(mm==="c"||mm==="p")q.set("r",String(cfg.R));
+ if(mm==="g")q.set("gd",cfg.gd||"m");
+ if(mm!=="w")q.set("p",cfg.pool);
+ return location.origin+location.pathname+"?"+q.toString()}
+function challenge(btn){const code=CH?CH.code:genCode(),u=chLink(code);
+ if(navigator.share){navigator.share({title:"YouKnowBall",text:"Can you beat this run? Your seed: "+code.toUpperCase(),url:u}).catch(()=>{})}
+ else cp(btn,u)}
 function cp(b,t){const bl=b.textContent,done=ok=>{b.textContent=ok?"Copied":"Copy failed";clearTimeout(b._cp);b._cp=setTimeout(()=>{b.textContent=bl},1600)};
 const legacy=()=>{try{const ta=document.createElement("textarea");ta.className="sr";ta.value=t;document.body.appendChild(ta);ta.select();const ok=document.execCommand("copy");ta.remove();return ok}catch(e){return false}};
 try{navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(t).then(()=>done(true),()=>done(legacy())):done(legacy())}catch(e){done(legacy())}}
@@ -72,7 +102,7 @@ function opt(id,l,v,c){return'<div><label class="lab" for="'+id+'">'+l+'</label>
 const MODES=[["c","Classic","Pass the phone","01"],["s","Solo","You against the clock","02"],["w","Wordle","Six tries, colour clues","03"],["g","Grid","3×3 club and nation","04"],["p","Career path","Clubs unlock one by one","05"],["d","Daily","Same five for everyone","06"],["o","Online","Race friends live","07"]];
 function setup0(){
 stopT();const m=cfg.mode;
-let h='<div class="card setup"><div class="step"><i>01</i>Pick your mode</div><div class="seg" role="group" aria-label="Game mode">'+MODES.map(a=>'<button type="button" data-m="'+a[0]+'" class="'+(m===a[0]?"on":"")+'" aria-pressed="'+(m===a[0])+'"><i>'+a[3]+'</i><b>'+a[1]+'</b><small>'+a[2]+'</small></button>').join("")+'</div><div class="step"><i>02</i>Set up '+MODES.find(a=>a[0]===m)[1]+'</div><p class="who mdesc">'+({c:"Five clues in a random order. Fewer clues, more points.",p:"Clubs unlock one by one. Name the player before the career ends.",d:"Same five players for everyone today. One try, no restarts.",w:"Find the mystery player in six tries. Each guess colors league, nation, position, club and birth year.",g:"Fill the 3 by 3 board. Name a player who fits a club row and a nation column.",s:"Just you against the clock. Three misses ends an endless run. Beat your personal best.",o:"Race your friends live on separate phones. First to name the player scores."})[m]+'</p>';
+let h=chBanner()+'<div class="card setup"><div class="step"><i>01</i>Pick your mode</div><div class="seg" role="group" aria-label="Game mode">'+MODES.map(a=>'<button type="button" data-m="'+a[0]+'" class="'+(m===a[0]?"on":"")+'" aria-pressed="'+(m===a[0])+'"><i>'+a[3]+'</i><b>'+a[1]+'</b><small>'+a[2]+'</small></button>').join("")+'</div><div class="step"><i>02</i>Set up '+MODES.find(a=>a[0]===m)[1]+'</div><p class="who mdesc">'+({c:"Five clues in a random order. Fewer clues, more points.",p:"Clubs unlock one by one. Name the player before the career ends.",d:"Same five players for everyone today. One try, no restarts.",w:"Find the mystery player in six tries. Each guess colors league, nation, position, club and birth year.",g:"Fill the 3 by 3 board. Name a player who fits a club row and a nation column.",s:"Just you against the clock. Three misses ends an endless run. Beat your personal best.",o:"Race your friends live on separate phones. First to name the player scores."})[m]+'</p>';
 if(m==="o"){olSetup(h);return}
 if(m==="s"){soloSetup(h);return}
 if(m==="w"){wordleSetup(h);return}
@@ -98,7 +128,7 @@ function start(mode,dk,rand){
 if(mode==="w"){wordleStart(dk,rand);return}if(mode==="g"){gridStart();return}
 const key=dk||dkey(new Date());let pool,names,R=cfg.R,pen=cfg.pen,ac=cfg.ac,teams=cfg.teams,T=cfg.T;
 if(mode==="d"){if(ST.daily[key]){S={ph:"dd",dk:key};draw();return}seed=hs(key);pool=P;names=["You"];R=5;pen=true;ac=false;teams=false;T=0}
-else{seed=null;pool=P.filter(p=>inPool(p,cfg.pool)&&(mode!=="p"||p.cl.split(", ").length>=4));names=mode==="s"?["You"]:cfg.names;if(mode==="s"){R=cfg.sr||10;pen=false;ac=false;teams=false}}
+else{seed=CH?hs(chSeedCode()):null;pool=P.filter(p=>inPool(p,cfg.pool)&&(mode!=="p"||p.cl.split(", ").length>=4));names=mode==="s"?["You"]:cfg.names;if(mode==="s"){R=cfg.sr||10;pen=false;ac=false;teams=false}}
 S={ph:"play",mode,dk:key,pl:names.map(n=>({n,s:0})),deck:shuf(pool).slice(0,Math.min(R,pool.length)),i:0,sh:1,t:0,done:false,msg:"",err:"",last:-1,hl:false,cs:null,res:[],run:0,t0:0,pen,ac,teams,T,solo:mode==="s"?{miss:0,endless:R>=99}:null};enter=true;
 if(!S.deck.length){/* never let an empty pool start a round; go back and say why */
 S={ph:"setup"};enter=true;draw();setErr("er","No players match that player pool. Try Everyone.");return}
@@ -139,14 +169,14 @@ $("cp").onclick=()=>cp($("cp"),t);$("sc").onclick=()=>{S={ph:"setup"};enter=true
 if(S.ph==="end"){
 const L=S.pl.slice().sort((a,b)=>b.s-a.s),a=tm(0),b=tm(1);
 const w=S.teams?(a===b?"The teams tie.":"<b>Team "+(a>b?"A":"B")+"</b> wins."):(()=>{const x=L.filter(y=>y.s===L[0].s).map(y=>esc(y.n)).join(" and ");return L.length>1?(x.includes(" and ")?x+" share the win.":"<b>"+x+"</b> takes it."):(S.mode==="s"?(S.nb?"Run over. New personal best!":"Run over. Personal best "+(ST.sb||0)):"Solo run finished.")})();
-$("app").innerHTML='<div class="card narrow end"><h3>Full time</h3>'+(S.teams?'<div class="stat"><div><b>'+a+'</b><span>Team A</span></div><div><b>'+b+'</b><span>Team B</span></div></div>':"")+L.map((x,k)=>'<div class="row'+(k?"":" top1")+'" style="animation-delay:'+k*40+'ms"><span><i class="rk">'+(k+1)+'</i>'+esc(x.n)+'</span><b data-to="'+x.s+'" data-from="0">'+x.s+'</b></div>').join("")+'<div class="grid" aria-label="Round results">'+grid(S.res)+'</div><p class="who">'+w+'</p><div class="r"><button class="btn" id="ag" type="button">Play again</button><button class="gh" id="cp" type="button">Copy results</button><button class="gh" id="sc" type="button">Settings</button></div></div>';
-$("ag").onclick=()=>start(S.mode);$("sc").onclick=()=>{S={ph:"setup"};enter=true;draw()};$("cp").onclick=()=>cp($("cp"),"YouKnowBall: "+L.map(x=>x.n+" "+x.s).join(", ")+"\n"+grid(S.res));return}
+$("app").innerHTML='<div class="card narrow end">'+chBanner()+'<h3>Full time</h3>'+(S.teams?'<div class="stat"><div><b>'+a+'</b><span>Team A</span></div><div><b>'+b+'</b><span>Team B</span></div></div>':"")+L.map((x,k)=>'<div class="row'+(k?"":" top1")+'" style="animation-delay:'+k*40+'ms"><span><i class="rk">'+(k+1)+'</i>'+esc(x.n)+'</span><b data-to="'+x.s+'" data-from="0">'+x.s+'</b></div>').join("")+'<div class="grid" aria-label="Round results">'+grid(S.res)+'</div><p class="who">'+w+'</p><div class="r"><button class="btn" id="ag" type="button">Play again</button><button class="gh" id="cp" type="button">Copy results</button><button class="gh" id="chf" type="button">Challenge a friend</button><button class="gh" id="sc" type="button">Settings</button></div></div>';
+$("ag").onclick=()=>start(S.mode);$("sc").onclick=()=>{S={ph:"setup"};enter=true;draw()};$("cp").onclick=()=>cp($("cp"),"YouKnowBall: "+L.map(x=>x.n+" "+x.s).join(", ")+"\n"+grid(S.res));$("chf").onclick=()=>challenge($("chf"));return}
 const p=S.deck[S.i],N=S.deck.length,cs=S.cs||(S.cs=clues(p)),tr=tier(p);
 if(!S.t0)S.t0=Date.now();
 const fresh=S.nk!==S.i+":"+S.sh;S.nk=S.i+":"+S.sh;
 const sk=S.last===S.t&&S.run>0?S.run:0,skNew=sk&&S.sk!==sk;S.sk=sk;
 const nPrev=S.done?S.sh:S.sh-1;
-let h='<div class="card play'+(sk?" has-streak":"")+'">'
+let h='<div class="card play'+(sk?" has-streak":"")+'">'+chBanner()+''
 +'<div class="hd bug"><span class="rd">Round <b>'+(S.i+1)+'</b>'+(S.solo&&S.solo.endless?'':' / '+N)+'</span><span class="badge'+(tr===2?" h":"")+'">'+(S.mode==="p"?"Career":TN[tr]+(tr?" +"+tr:""))+'</span>'+(S.solo?'<span class="stk">Strikes <b>'+S.solo.miss+'</b>/3</span>':'')+'<span class="wp">'+(S.done?"Round over":"Worth <b>"+pts()+'</b> '+(pts()===1?"pt":"pts"))+'</span>'+(!S.done&&S.T?'<span id="tl" class="tn">'+S.T+'s</span>':'')+'</div>';
 if(sk)h+='<div class="streak'+(skNew?" in":"")+'"><b>'+sk+'</b><span>Streak</span></div>';
 h+='<div class="dots">'+S.deck.map((_,k)=>'<i class="'+(k<S.i?"d":k===S.i?"c":"")+'"></i>').join("")+'</div><div class="stack">';
@@ -193,11 +223,11 @@ pr.on("error",e=>{if(!done)rej({code:e.type==="peer-unavailable"?"not_found":"up
 const CODE="abcdefghjkmnpqrstuvwxyz23456789",genCode=()=>Array.from({length:6},()=>CODE[Math.floor(Math.random()*CODE.length)]).join("");
 const NOROOM="Online play is not available right now. Check your connection and reload.";
 function olSetup(h){
-h+='<h3>Your name</h3><input id="on" maxlength="14" autocomplete="off" placeholder="Name" aria-label="Your name" value="'+esc(cfg.on||"")+'"><div class="r" style="margin-top:12px">'+opt("rd","Rounds",[[5,"5"],[10,"10"],[15,"15"]],[5,10,15].includes(cfg.R)?cfg.R:10)+opt("sp","New clue every",[[10,"10 seconds"],[15,"15 seconds"],[20,"20 seconds"]],cfg.sp||15)+opt("pl","Players",[["x","Everyone"],["0","Current stars"],["1","Legends"],["PL","Premier League"],["LL","La Liga"],["SA","Serie A"],["BL","Bundesliga"],["L1","Ligue 1"]],cfg.pool)+'</div><div class="opts"><label><input type="checkbox" id="o_pen"'+(cfg.pen?" checked":"")+'>Wrong guess costs 1</label><label><input type="checkbox" id="o_snd"'+(cfg.snd?" checked":"")+'>Sound and haptics</label></div><div class="step"><i>03</i>Open the room</div><button class="btn" id="hs" type="button" style="width:100%">Host a room</button><h3 style="margin:22px 0 10px">Or join a friend</h3><div class="r"><input id="jc" maxlength="6" autocomplete="off" autocapitalize="off" placeholder="Room code" aria-label="Room code"><button class="gh" id="jn" type="button" style="flex:0 0 auto">Join room</button></div><div class="err" aria-live="polite" id="er">'+(RM?"":NOROOM)+'</div><p class="who" style="font-size:13px">'+(RSRC==="claude"?"Everyone playing must open this page while signed in to claude.ai with access to it. People on a public link can not join a room.":"Share the code with friends anywhere. Everyone opens this page and taps Join room.")+'</p></div>';
+h+='<h3>Your name</h3><input id="on" maxlength="14" autocomplete="off" placeholder="Name" aria-label="Your name" value="'+esc(cfg.on||"")+'"><div class="r" style="margin-top:12px">'+opt("rd","Rounds",[[5,"5"],[10,"10"],[15,"15"]],[5,10,15].includes(cfg.R)?cfg.R:10)+opt("sp","New clue every",[[10,"10 seconds"],[15,"15 seconds"],[20,"20 seconds"]],cfg.sp||15)+opt("pl","Players",[["x","Everyone"],["0","Current stars"],["1","Legends"],["PL","Premier League"],["LL","La Liga"],["SA","Serie A"],["BL","Bundesliga"],["L1","Ligue 1"]],cfg.pool)+'<div style="flex:1 1 100%"><label class="lab" for="ors">Room seed, optional</label><input id="ors" maxlength="10" placeholder="Empty = random" style="margin-top:6px" autocomplete="off" aria-label="Room seed, optional" value="'+esc(cfg.rs||"")+'"></div></div><div class="opts"><label><input type="checkbox" id="o_pen"'+(cfg.pen?" checked":"")+'>Wrong guess costs 1</label><label><input type="checkbox" id="o_snd"'+(cfg.snd?" checked":"")+'>Sound and haptics</label></div><div class="step"><i>03</i>Open the room</div><button class="btn" id="hs" type="button" style="width:100%">Host a room</button><h3 style="margin:22px 0 10px">Or join a friend</h3><div class="r"><input id="jc" maxlength="6" autocomplete="off" autocapitalize="off" placeholder="Room code" aria-label="Room code"><button class="gh" id="jn" type="button" style="flex:0 0 auto">Join room</button></div><div class="err" aria-live="polite" id="er">'+(RM?"":NOROOM)+'</div><p class="who" style="font-size:13px">'+(RSRC==="claude"?"Everyone playing must open this page while signed in to claude.ai with access to it. People on a public link can not join a room.":"Share the code with friends anywhere. Everyone opens this page and taps Join room.")+'</p></div>';
 $("app").innerHTML=h;
 document.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{cfg.mode=b.dataset.m;save();enter=true;setup();post()});
 document.querySelectorAll(".opts input").forEach(i=>i.onchange=()=>{cfg[i.id.slice(2)]=i.checked;save()});
-const go=host=>{const nm=$("on").value.trim(),code=host?genCode():$("jc").value.trim().toLowerCase();if(!RM){setErr("er",NOROOM);return}if(!nm){setErr("er","Add your name first");return}if(!host&&!/^[a-z0-9]{6}$/.test(code)){setErr("er","Enter the 6 character room code");return}cfg.on=nm;if(host){cfg.R=+$("rd").value;cfg.sp=+$("sp").value;cfg.pool=$("pl").value}save();olStart(host,nm,code)};
+const go=host=>{const nm=$("on").value.trim(),code=host?genCode():$("jc").value.trim().toLowerCase();if(!RM){setErr("er",NOROOM);return}if(!nm){setErr("er","Add your name first");return}if(!host&&!/^[a-z0-9]{6}$/.test(code)){setErr("er","Enter the 6 character room code");return}cfg.on=nm;if(host){cfg.R=+$("rd").value;cfg.sp=+$("sp").value;cfg.pool=$("pl").value;if($("ors"))cfg.rs=$("ors").value.trim().toLowerCase().replace(/[^a-z0-9]/g,"").slice(0,10)}save();olStart(host,nm,code)};
 $("hs").onclick=()=>go(true);$("jn").onclick=()=>go(false);$("on").onkeydown=e=>{if(e.key==="Enter"&&$("jc").value.trim())$("jn").click()}}
 const olCard=(h,c)=>{$("app").innerHTML='<div class="card '+(c||"narrow")+'">'+h+'<p id="ost" class="who ost"></p></div>';post()};
 const oclHtml=(cl,fin)=>cl.map((c,i)=>!fin&&i===cl.length-1?'<div class="cl slab nw"><em class="cn">Clue '+(i+1)+' of 5</em><span class="ct" data-fit>'+esc(c)+'</span></div>':'<div class="cl tk'+(!fin&&i===cl.length-2?" dr":"")+'" style="--age:'+((fin?cl.length:cl.length-1)-i)+'"><em>'+(i+1)+'</em><span>'+esc(c)+'</span></div>').join("");
@@ -229,8 +259,9 @@ else{if(cfg.pen)HS.sc[id].s=Math.max(0,HS.sc[id].s-1);HS.fb[id]=HS.k[id]+":0"}
 hostPub();olRender()}
 function hostNext(){HS.idx++;if(HS.idx>=HS.deck.length){HS.ph="end";return}const a=HS.deck[HS.idx];HS.ans=a;HS.r=HS.idx+1;HS.clues=clues(a);HS.sh=1;HS.tl=HS.T;HS.res=null;HS.fb={}}
 function hostTick(){if(!HS)return;if(HS.ph==="play"){HS.tl--;if(HS.tl<=0){if(HS.res)hostNext();else if(HS.sh<5){HS.sh++;HS.tl=HS.T}else{HS.res={n:HS.ans.n,nat:HS.ans.nat,ft:HS.ans.ft,by:"",pts:0};HS.tl=5}}}hostPub();olRender()}
-function hostStart(){HS.deck=shuf(P.filter(x=>inPool(x,cfg.pool))).slice(0,Math.min(HS.N,P.filter(x=>inPool(x,cfg.pool)).length));if(!HS.deck.length){olStatus("That player pool has no players. Pick Everyone.");return}
-HS.N=HS.deck.length;HS.idx=-1;Object.values(HS.sc).forEach(x=>x.s=0);HS.ph="play";hostNext();hostPub();olRender();try{R.lock(true)}catch(e){}}
+function hostStart(){const pool=P.filter(x=>inPool(x,cfg.pool));if(!pool.length){olStatus("That player pool has no players. Pick Everyone.");return}
+ seed=cfg.rs?hs("kr"+cfg.rs):null;HS.deck=shuf(pool).slice(0,Math.min(HS.N,pool.length));seed=null;
+ HS.N=HS.deck.length;HS.idx=-1;Object.values(HS.sc).forEach(x=>x.s=0);HS.ph="play";hostNext();hostPub();olRender();try{R.lock(true)}catch(e){}}
 function olRender(){
 if(!OL||!R||OL.gone)return;const s=OL.host?snap():OL.H;
 if(!s){olCard('<h3>Waiting for the host</h3><p class="who">Room '+esc(OL.code.toUpperCase())+'. If the host left, start a new room.</p><button class="gh" id="lv" type="button">Leave</button>');$("lv").onclick=olLeave;OL.sig="w";return}
@@ -278,9 +309,13 @@ function addShot(c){const card=$("app").querySelector(".card");if(!c||!card)retu
   box.innerHTML='<p class="who">Your result card</p><img alt="Result card" src="'+url+'"><div class="r"><button class="gh" id="shr" type="button">Share</button></div>';card.appendChild(box);
   $("shr").onclick=()=>c.toBlob(b=>{const f=new File([b],"youknowball.png",{type:"image/png"});if(navigator.canShare&&navigator.canShare({files:[f]}))navigator.share({files:[f],title:"YouKnowBall"}).catch(()=>{});else toast("Long-press the image to save it")})}
 function wcmp(g,t){const sh=g.cl.split(", ").some(c=>t.cl.split(", ").includes(c));const d=(+t.yr)-(+g.yr),a=Math.abs(d);return[{l:g.lg,s:g.lg===t.lg?"ok":"no"},{l:g.nat,s:g.nat===t.nat?"ok":"no"},{l:g.pos,s:g.pos===t.pos?"ok":"no"},{l:sh?"Shared club":"No club",s:sh?"ok":"no"},{l:g.yr+(d===0?"":d>0?" ↑":" ↓"),s:a===0?"ok":a<=3?"mid":"no"}]}
-function wordleStart(dk,rand){const key=rand?null:(dk||dkey(new Date()));ST.wd=ST.wd||{};seed=key?hs(key+"w"):null;const tgt=shuf(P)[0];seed=null;const played=key&&ST.wd[key];WS={key,t:tgt,g:[],done:!!played,won:!!(played&&played.w>0),res:played||null};S={ph:"wd"};enter=true;draw()}
+function wordleStart(dk,rand){ST.wd=ST.wd||{};
+ const key=rand?null:(dk||dkey(new Date()));
+ /* seeded target: daily/archived = the date (offline-reproducible); a random puzzle while a challenge is armed = the challenge seed; else random */
+ const sd=key?hs(String(key)+"w"):CH?hs(chSeedCode()):null;seed=sd;const tgt=shuf(P)[0];seed=null;
+ const played=key&&ST.wd[key];WS={key,t:tgt,g:[],done:!!played,won:!!(played&&played.w>0),res:played||null};S={ph:"wd"};enter=true;draw()}
 function wordleGuess(){const v=norm($("wg").value);if(!v){setErr("er","Type a player first");return}const ms=matchPlayers(v);if(!ms.length){setErr("er","Not in the player list");return}if(ms.length>1){setErr("er","More than one player fits. Type the full name.");return}const p=ms[0];if(WS.g.some(r=>r.p===p)){setErr("er","You already tried them");return}WS.g.push({p,c:wcmp(p,WS.t)});if(p===WS.t){WS.won=true;WS.done=true}else if(WS.g.length>=6){WS.done=true}if(WS.done){wordleEnd()}else{draw()}}
-function wordleRender(){if(WS.done){wordleEnd();return}const rows=WS.g.map((r,i)=>'<div class="wr'+(i===WS.g.length-1?" nw":"")+'"><span class="wn">'+esc(r.p.n)+'</span>'+r.c.map(x=>'<span class="wc '+x.s+'">'+(x.h||esc(String(x.l)))+'</span>').join("")+'</div>').join("")+Array(6-WS.g.length).fill('<div class="wr empty"><span class="wn"></span>'+'<span class="wc"></span>'.repeat(5)+'</div>').join("");const left=6-WS.g.length;$("app").innerHTML='<div class="card mid"><div class="hd"><span>'+(WS.key?"Daily "+WS.key:"Random puzzle")+'</span><span>'+left+' tries left</span></div><div class="wh"><span></span><span>League</span><span>Nation</span><span>Position</span><span>Club</span><span>Born</span></div>'+rows+'<input id="wg" spellcheck="false" placeholder="Type a player" aria-label="Your guess" autocomplete="off" autocapitalize="off" style="margin-top:12px"><div class="err" aria-live="polite" id="er"></div><div class="r"><button class="btn" id="wgb" type="button">Guess</button><button class="gh" id="wgq" type="button">Give up</button><button class="gh qt" type="button">Quit</button></div></div>';post();$("wgb").onclick=wordleGuess;$("wgq").onclick=()=>{WS.done=true;wordleEnd()};$("wg").onkeydown=e=>{if(e.key==="Enter")wordleGuess()};$("wg").focus({preventScroll:true})}
+function wordleRender(){if(WS.done){wordleEnd();return}const rows=WS.g.map((r,i)=>'<div class="wr'+(i===WS.g.length-1?" nw":"")+'"><span class="wn">'+esc(r.p.n)+'</span>'+r.c.map(x=>'<span class="wc '+x.s+'">'+(x.h||esc(String(x.l)))+'</span>').join("")+'</div>').join("")+Array(6-WS.g.length).fill('<div class="wr empty"><span class="wn"></span>'+'<span class="wc"></span>'.repeat(5)+'</div>').join("");const left=6-WS.g.length;$("app").innerHTML='<div class="card mid">'+chBanner()+'<div class="hd"><span>'+(WS.key?"Daily "+WS.key:"Random puzzle")+'</span><span>'+left+' tries left</span></div><div class="wh"><span></span><span>League</span><span>Nation</span><span>Position</span><span>Club</span><span>Born</span></div>'+rows+'<input id="wg" spellcheck="false" placeholder="Type a player" aria-label="Your guess" autocomplete="off" autocapitalize="off" style="margin-top:12px"><div class="err" aria-live="polite" id="er"></div><div class="r"><button class="btn" id="wgb" type="button">Guess</button><button class="gh" id="wgq" type="button">Give up</button><button class="gh qt" type="button">Quit</button></div></div>';post();$("wgb").onclick=wordleGuess;$("wgq").onclick=()=>{WS.done=true;wordleEnd()};$("wg").onkeydown=e=>{if(e.key==="Enter")wordleGuess()};$("wg").focus({preventScroll:true})}
 function wordleImg(){const cols={ok:"#33cc7a",mid:"#f2c94c",no:"#2a3a31"},lab=["League","Nation","Position","Club","Born"];
   return cardImg(WS.key?"Daily "+WS.key:"Random puzzle",WS.won?"Got it in "+WS.g.length+(WS.g.length===1?" try":" tries"):"Out of tries",x=>{
     const top=400,cw=180,gap=12,left=70;lab.forEach((l,i)=>{x.fillStyle="#a3b9a9";x.font="700 30px Barlow,Arial";x.fillText(l.toUpperCase(),left+i*(cw+gap)+8,top)});
@@ -305,16 +340,14 @@ function gridGen(d,pool){
   let g=tryLv(lv);if(g)return g;
   for(const l of d==="e"?[GDIFF.m,LOOSE]:[LOOSE]){g=tryLv(l);if(g){g.relaxed=true;return g}}
   return null}
-function gridStart(){const g=gridGen(cfg.gd,cfg.pool);if(!g){S={ph:"setup"};draw();setErr("er","No grid fits this difficulty and pool. Try Medium or Everyone.");return}GS={rows:g.rows,cols:g.cols,f:Array(9).fill(null),used:[],miss:0,done:false,msg:g.relaxed?"Not enough players for that difficulty and pool, so this grid is a little easier.":"",d:cfg.gd||"m",max:cfg.gs||3,hint:!!cfg.gh,hl:({e:5,m:3,h:2})[cfg.gd||"m"],hm:0};S={ph:"grid"};enter=true;draw()}
-const GDN={e:"Easy",m:"Medium",h:"Hard"},GDD={e:"Big clubs and common nations. Every box has 3 or more answers.",m:"Mid-size clubs. Every box has 2 or more answers.",h:"Any club, rare pairings. Some boxes have just one answer."};
-const gbest=d=>(ST.gbd&&ST.gbd[d])||(d==="m"?ST.gb||0:0);
+function gridStart(){seed=CH?hs(chSeedCode()):null;const g=gridGen(cfg.gd,cfg.pool);seed=null;if(!g){S={ph:"setup"};draw();setErr("er","No grid fits this difficulty and pool. Try Medium or Everyone.");return}GS={rows:g.rows,cols:g.cols,f:Array(9).fill(null),used:[],miss:0,done:false,msg:g.relaxed?"Not enough players for that difficulty and pool, so this grid is a little easier.":"",d:cfg.gd||"m",max:cfg.gs||3,hint:!!cfg.gh,hl:({e:5,m:3,h:2})[cfg.gd||"m"],hm:0};S={ph:"grid"};enter=true;draw()}
 function gridSetup(h){const d=cfg.gd||"m";
 h+='<div class="r">'+opt("gd","Difficulty",[["e","Easy"],["m","Medium"],["h","Hard"]],d)+opt("gs","Strikes",[[3,"3 strikes"],[5,"5 strikes"],[99,"No strikes (practice)"]],cfg.gs||3)+opt("gp","Players",[["x","Everyone"],["0","Current stars"],["1","Legends"]],["x","0","1"].includes(cfg.pool)?cfg.pool:"x")+'</div><p class="who" id="gdesc">'+GDD[d]+'</p><div class="opts"><label><input type="checkbox" id="o_gh"'+(cfg.gh?" checked":"")+'>Show how many players fit each box</label></div><div class="step"><i>03</i>Kick off</div><div class="r"><button class="btn" id="go" type="button">Start grid</button><button class="gh" id="gbst" type="button" style="flex:0 0 auto">Best: '+gbest(d)+'/9</button></div><div class="err" aria-live="polite" id="er"></div></div>';
 $("app").innerHTML=h;
 document.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{cfg.mode=b.dataset.m;save();enter=true;setup();post()});
 $("gd").onchange=()=>{const v=$("gd").value;$("gdesc").textContent=GDD[v];$("gbst").textContent="Best: "+gbest(v)+"/9"};
 $("go").onclick=()=>{cfg.gd=$("gd").value;cfg.gs=+$("gs").value;cfg.pool=$("gp").value;cfg.gh=$("o_gh").checked;save();start("g")}}
-function gridRender(){if(GS.done){gridEnd();return}const fit=i=>P.filter(p=>p.cl.split(", ").includes(GS.rows[Math.floor(i/3)])&&p.nat===GS.cols[i%3]).length;const cell=i=>GS.f[i]?'<div class="gc on">'+esc(GS.f[i].n.split(" ").pop())+'</div>':'<div class="gc">'+(GS.hint?'<span>?</span><small>'+fit(i)+' fit</small>':'?')+'</div>';let rows='<div class="gh3"><span></span>'+GS.cols.map(c=>'<span class="gl" data-fit>'+esc(c)+'</span>').join("")+'</div>';for(let r=0;r<3;r++)rows+='<div class="gh3"><span class="gl" data-fit>'+esc(GS.rows[r])+'</span>'+[0,1,2].map(c=>cell(r*3+c)).join("")+'</div>';const n=GS.f.filter(Boolean).length;$("app").innerHTML='<div class="card mid"><div class="hd"><span>Boxes <b>'+n+'</b>/9 <span class="badge'+(GS.d==="h"?" h":"")+'">'+GDN[GS.d||"m"]+'</span></span><span class="stk">'+(GS.max>=99?"Practice, no strikes":'<b>'+(GS.max-GS.miss)+'</b> strikes left')+'</span></div>'+rows+'<p class="who" style="font-size:13px">Name a player who fits a box. They fill the first open box they match.</p><input id="gq" placeholder="Type a player" aria-label="Your guess" autocomplete="off" autocapitalize="off" spellcheck="false"><div class="err'+(GS.hm?" okm":"")+'" aria-live="polite" id="er">'+esc(GS.msg||"")+'</div><div class="r"><button class="btn" id="gqb" type="button">Place</button><button class="gh" id="ghint" type="button"'+(GS.max<99&&GS.hl<=0?" disabled":"")+'>Hint ('+(GS.max>=99?"&infin;":GS.hl)+')</button><button class="gh" id="gnew" type="button">New grid</button><button class="gh qt" type="button">Quit</button></div></div>';post();$("gqb").onclick=gridGuess;$("gq").onkeydown=e=>{if(e.key==="Enter")gridGuess()};$("gnew").onclick=()=>gridStart();$("ghint").onclick=gridHint;$("gq").focus({preventScroll:true})}
+function gridRender(){if(GS.done){gridEnd();return}const fit=i=>P.filter(p=>p.cl.split(", ").includes(GS.rows[Math.floor(i/3)])&&p.nat===GS.cols[i%3]).length;const cell=i=>GS.f[i]?'<div class="gc on">'+esc(GS.f[i].n.split(" ").pop())+'</div>':'<div class="gc">'+(GS.hint?'<span>?</span><small>'+fit(i)+' fit</small>':'?')+'</div>';let rows='<div class="gh3"><span></span>'+GS.cols.map(c=>'<span class="gl" data-fit>'+esc(c)+'</span>').join("")+'</div>';for(let r=0;r<3;r++)rows+='<div class="gh3"><span class="gl" data-fit>'+esc(GS.rows[r])+'</span>'+[0,1,2].map(c=>cell(r*3+c)).join("")+'</div>';const n=GS.f.filter(Boolean).length;$("app").innerHTML='<div class="card mid">'+chBanner()+'<div class="hd"><span>Boxes <b>'+n+'</b>/9 <span class="badge'+(GS.d==="h"?" h":"")+'">'+GDN[GS.d||"m"]+'</span></span><span class="stk">'+(GS.max>=99?"Practice, no strikes":'<b>'+(GS.max-GS.miss)+'</b> strikes left')+'</span></div>'+rows+'<p class="who" style="font-size:13px">Name a player who fits a box. They fill the first open box they match.</p><input id="gq" placeholder="Type a player" aria-label="Your guess" autocomplete="off" autocapitalize="off" spellcheck="false"><div class="err'+(GS.hm?" okm":"")+'" aria-live="polite" id="er">'+esc(GS.msg||"")+'</div><div class="r"><button class="btn" id="gqb" type="button">Place</button><button class="gh" id="ghint" type="button"'+(GS.max<99&&GS.hl<=0?" disabled":"")+'>Hint ('+(GS.max>=99?"&infin;":GS.hl)+')</button><button class="gh" id="gnew" type="button">New grid</button><button class="gh qt" type="button">Quit</button></div></div>';post();$("gqb").onclick=gridGuess;$("gq").onkeydown=e=>{if(e.key==="Enter")gridGuess()};$("gnew").onclick=()=>gridStart();$("ghint").onclick=gridHint;$("gq").focus({preventScroll:true})}
 function gridHint(){if(GS.max<99&&GS.hl<=0)return;
   const opts=[];for(let i=0;i<9;i++){if(GS.f[i])continue;const ps=P.filter(p=>!GS.used.includes(p.n)&&p.cl.split(", ").includes(GS.rows[Math.floor(i/3)])&&p.nat===GS.cols[i%3]);if(ps.length)opts.push([i,ps])}
   GS.hm=1;
@@ -335,6 +368,14 @@ let ms="";GS.f.forEach((x,i)=>{if(x)return;const r=GS.rows[Math.floor(i/3)],c=GS
 $("app").innerHTML='<div class="card narrow"><h3>Grid finished</h3><div class="stat"><div><b>'+n+'/9</b><span>Boxes filled</span></div><div><b>'+(GS.max<99?gbest(d)+"/9":"-")+'</b><span>'+(GS.max<99?"Best on "+GDN[d]:"Practice run")+'</span></div></div>'+(ms?'<p class="who">Boxes you missed, and who fits</p>'+ms:"")+'<div class="r"><button class="btn" id="gan" type="button">New grid</button><button class="gh" id="gbk" type="button">Back</button></div></div>';addShot(gridImg());post();$("gan").onclick=()=>gridStart();$("gbk").onclick=()=>{S={ph:"setup"};enter=true;draw()}}
 
 setup();post();
+/* open a challenge or a dated daily straight from the link; no params = the normal home screen */
+if(CH){if(cfg.mode==="w")start("w",null,true);else start(cfg.mode)}
+else if(DAILYOK)start("d",DAILYQ);
+/* clear the challenge from anywhere without touching the params in history */
+document.addEventListener("click",e=>{
+ if(!e.target.closest||!e.target.closest("#cown"))return;
+ CH=null;enter=true;S={ph:"setup"};draw();
+});
 (function(){const el=$("intro");if(!el)return;
 if(matchMedia("(prefers-reduced-motion: reduce)").matches){el.remove();return}
 $("it").innerHTML=spl("YouKnowBall",650);$("ik").textContent=P.length+" players on the team sheet";
