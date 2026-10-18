@@ -187,6 +187,22 @@ input:disabled{opacity:.55}
 .rev.miss .pts{background:transparent;color:var(--slab-sub);border:2px solid var(--slab-sub)}
 b.pop{display:inline-block;animation:pp .3s var(--ease)}
 
+/* player card under the reveal (semantic dl; no motion, so it is reduced-motion safe) */
+.pcard{margin:0 0 24px;padding:20px 22px;background:var(--soft);border-left:5px solid var(--ink)}
+.pc-h{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 14px;margin:0 0 14px}
+.pc-h h4{margin:0;font:800 clamp(24px,5vw,38px)/1 var(--fd);letter-spacing:.03em;text-transform:uppercase;overflow-wrap:anywhere}
+.pc-t{flex:none;padding:3px 10px;font:700 14px var(--fd);letter-spacing:.14em;text-transform:uppercase;border:1px solid var(--line)}
+.pc-t b{margin-right:6px;font-weight:800}
+.pc-t.leg{background:var(--ink);color:var(--it);border-color:var(--ink)}
+.pc-l{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 20px;margin:0}
+.pc-l div{min-width:0}
+.pc-l dt{font:700 12px var(--fd);letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
+.pc-l dd{margin:2px 0 0;font:600 17px/1.35 var(--fb);overflow-wrap:anywhere}
+@media(min-width:700px){.pc-l{grid-template-columns:repeat(4,minmax(0,1fr))}.pc-l .wide{grid-column:1/-1}}
+.pc-a{display:inline-flex;align-items:center;min-height:44px;margin-top:14px;font:700 16px var(--fd);letter-spacing:.1em;text-transform:uppercase;color:var(--ink)}
+.pc-a:after{content:"\2197";margin-left:8px;font-size:18px}
+@media(hover:hover){.pc-a:hover{opacity:.75}}
+
 /* score strip along the bottom */
 .chips.strip{flex-wrap:wrap;gap:0;margin:36px calc(var(--pad) * -1) -28px;border-top:4px solid var(--ink);background:rgba(0,0,0,.28)}
 :root[data-theme="light"] .chips.strip{background:rgba(15,61,36,.08)}
