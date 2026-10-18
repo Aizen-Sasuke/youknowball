@@ -321,6 +321,8 @@ def club_situation(stints, birth_year):
             start_y = int(s["start"][:4])
             if start_y > TODAY.year:
                 reasons.append("live club starts in the future")
+            if start_y < TODAY.year - 20:
+                reasons.append("live club spell started over 20 years ago")
             prev_end = max((int(x["end"][:4]) for x in stints if x is not s and x["end"]), default=None)
             if prev_end is not None and prev_end + 2 < start_y:
                 reasons.append("gap since the previous club")

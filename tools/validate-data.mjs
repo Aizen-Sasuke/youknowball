@@ -20,7 +20,7 @@ try {
 const { RAW, SPR, LG, CURRENT, DATA_UPDATED } = data;
 
 const LEAGUES = new Set(["PL", "LL", "SA", "BL", "L1", "OT"]);
-const EXPECTED_ROWS = 279;
+const EXPECTED_ROWS = 306;
 
 const fails = [];
 let shown = 0;

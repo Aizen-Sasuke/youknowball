@@ -64,6 +64,33 @@ source, no query planner, and a fraction of the requests. Requests are rate-limi
 `data/enrich.json` and `data/enrich-report.csv` are working files and are gitignored — the committed
 artefact is the `DATA_UPDATED`/`CURRENT` block in `js/data.js`.
 
+## Add players (`add_players.py`)
+
+`enrich_players.py` refreshes the players already in the deck. `add_players.py` grows the deck,
+aimed at the thin league pools:
+
+    python add_players.py           # write data/add-rows.txt + data/add-report.csv, print a review
+    python add_players.py --apply   # merge the rows into js/data.js (RAW + one LG block)
+
+Candidates are curated (name, league, star/legend flag, birth year, nationality, position, clubs)
+and then verified against Wikidata before anything is written:
+
+- the English Wikipedia title must resolve to an item with `P106 = Q937857` (footballer);
+- the curated birth year and nationality must agree with `P569`/`P27` (country labels are mapped,
+  so "Pahlavi Iran" satisfies "Iran");
+- every club is a canonical short token mapped to a QID in `CLUB_QID`, and that QID must appear in
+  the player's `P54` — so a club the source does not support is refused, not invented;
+- position buckets are compared but only reported (they are judgement calls, as above).
+
+Each new row's `fact` is machine-written and labelled `Auto~…` (the same `Label~Text` shape as the
+special clues), built from the structured fields with a FIFA-100 / Ballon d'Or / Footballer-of-the-Year
+clause when Wikidata has one. Replace any `Auto~` fact with a hand-written one freely. Every field
+carries its Wikidata QID in the review CSV. Club tokens reuse the deck's existing vocabulary so club
+clues and the Grid stay consistent; add a token to `CLUB_QID` (and pick a short, deck-style name)
+when a genuinely new club is needed.
+
+After adding rows, re-run `enrich_players.py` so the new players get `CURRENT`/`DATA_UPDATED` entries.
+
 ## Known limits
 
 - Wikidata data can be incomplete. Check `report.csv` for players with missing fields.
