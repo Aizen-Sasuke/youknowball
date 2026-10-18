@@ -47,6 +47,8 @@ Some strict networks block direct connections. If a friend cannot join, add a TU
 
 ## Notes
 
+- Data integrity is gated in CI: `tools/validate-data.mjs` (dependency-free Node ESM) asserts the row count, uniqueness, league-tag coverage, league codes, special-clue resolution and tier values of `js/data.js`; `.github/workflows/validate.yml` runs it on every push and pull request. The shipped site stays zero-build. Run `node tools/validate-data.mjs` locally.
+
 - Player facts are written from memory and may contain mistakes. Open an issue or edit the data in `js/data.js` (the `RAW`, `SPR` and `LG` blocks). Recomputed by `node tools/data-audit.js` (parses the three blocks directly): 279 rows, no duplicate names, league tags cover all 279 players — spread PL 121, LL 69, SA 46, BL 21, L1 14, OT 8 — and all 32 special-clue entries resolve to real players. The thinnest pool is **OT** ("other", 8 players, all of them legends) — contributions welcome there.
 - Licensed under the MIT license (`LICENSE`).
 - Link preview uses an `og:image` meta tag pointing at the GitHub Pages icon URL; if you host elsewhere, update that absolute URL (social crawlers need it).
