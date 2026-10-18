@@ -41,4 +41,11 @@ Small additive JS (display only): `S.nk`, `S.sk` for fresh-clue and streak-tab d
 - Online rooms host a "Room seed" input (`cfg.rs`); `hostStart()` seeds the deck with it when set. Room-to-room identity, not needed for same-room fairness (the host already drives every peer's deck).
 - Behaviour notes: (1) opening a challenge link auto-starts that game (additive — only when the URL has a valid `?seed`); (2) while a challenge is armed, every Classic/Solo/Career start and every Wordle "Random puzzle" uses the challenge seed, and Grid boards are seeded too; (3) a challenge Classic with no saved names stores one "You" player in `cfg.names`.
 - Latent bug fixed: the boot IIFE (line 218) re-renders setup synchronously mid-file, so reloading with a saved Grid mode hit `GDN`/`GDD`/`gbest` before their declaration (TDZ crash, recovered only by a later re-render). Those constants now live above the boot IIFE.
-- Cache: `sw.js` asset list is built from one `XV` const (+ `VER`) so future bumps are one line. This push = `ykb-v14`.
+- Cache: `sw.js` asset list is built from one `XV` const (+ `VER`) so future bumps are one line. This push = `ykb-v15`.
+
+## v14.1 — per-mode share text
+- Every mode now shares a proper result string via `share(txt, btn)`: `navigator.share` sheet when available, the existing `cp()` clipboard helper as fallback (including its execCommand path for non-secure origins). The system sheet appears INSTEAD of an immediate copy on phones — the fallback copies as before.
+- Classic/Career/Solo end: "Copy results" → "Share results" — `YouKnowBall ⚽ Classic — solved X/Y · top N pts` (teams shows `Team A a – b Team B`), the round-result emoji grid, and a challenge link so sharing invites a rematch. With no armed challenge that link mints a NEW seed: a rematch with the same settings, not a replay of finished rounds.
+- Wordle: "Copy result" → "Share result" — mode line + the 6-row emoji grid + a link: dated daily `?d=` for the Daily, a seeded random-puzzle link for a rematch.
+- Grid: new "Share result" button on the finished screen — boxes count, difficulty, seeded rematch link.
+- Daily: same share string as before (grid + score) plus a `?d=YYYY-MM-DD` replay link.

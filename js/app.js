@@ -95,6 +95,12 @@ function chLink(code,mm){mm=mm||cfg.mode;const q=new URLSearchParams();
 function challenge(btn){const code=CH?CH.code:genCode(),u=chLink(code);
  if(navigator.share){navigator.share({title:"YouKnowBall",text:"Can you beat this run? Your seed: "+code.toUpperCase(),url:u}).catch(()=>{})}
  else cp(btn,u)}
+/* share with the system sheet when possible, clipboard as fallback (cp also restores the label) */
+function share(txt,btn){const bl=btn?btn.textContent:null;
+ if(navigator.share){navigator.share({title:"YouKnowBall",text:txt}).then(()=>{if(btn){btn.textContent="Shared";clearTimeout(btn._sh);btn._sh=setTimeout(()=>{if(btn.isConnected)btn.textContent=bl},1600)}}).catch(e=>{if(e&&e.name==="AbortError")return;cp(btn,txt)})}
+ else cp(btn,txt)}
+/* rematch link used inside shared text: the armed challenge replays itself; otherwise a fresh seeded match */
+function rematchLink(mm){return chLink(CH?CH.code:genCode(),mm||cfg.mode)}
 function cp(b,t){const bl=b.textContent,done=ok=>{b.textContent=ok?"Copied":"Copy failed";clearTimeout(b._cp);b._cp=setTimeout(()=>{b.textContent=bl},1600)};
 const legacy=()=>{try{const ta=document.createElement("textarea");ta.className="sr";ta.value=t;document.body.appendChild(ta);ta.select();const ok=document.execCommand("copy");ta.remove();return ok}catch(e){return false}};
 try{navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(t).then(()=>done(true),()=>done(legacy())):done(legacy())}catch(e){done(legacy())}}
@@ -163,14 +169,18 @@ if(S.ph==="st"){
 $("app").innerHTML='<div class="card narrow"><h3>Your stats on this device</h3><div class="stat"><div><b>'+ST.g+'</b><span>Games played</span></div><div><b>'+ST.solved+'</b><span>Players solved</span></div><div><b>'+ST.best+'</b><span>Best streak in a game</span></div><div><b>'+(ST.fast?(ST.fast/1000).toFixed(1)+"s":"None yet")+'</b><span>Fastest solve</span></div><div><b>'+streak()+'</b><span>Daily streak</span></div><div><b>'+Object.keys(ST.daily).length+'</b><span>Dailies played</span></div></div><button class="gh" id="bk" type="button">Back</button></div>';
 $("bk").onclick=()=>{S={ph:"setup"};enter=true;draw()};return}
 if(S.ph==="dd"||(S.ph==="end"&&S.mode==="d")){
-const k=S.dk||dkey(new Date()),d=ST.daily[k],t="YouKnowBall daily "+k+"\n"+d.g+"\nScore "+d.s;
-$("app").innerHTML='<div class="card narrow"><h3>'+(S.ph==="dd"?"You already played today":"Daily complete")+'</h3><div class="grid">'+d.g+'</div><div class="row"><span>Score</span><b>'+d.s+'</b></div><p class="who">Daily streak: <b>'+streak()+'</b>. New players tomorrow.</p><div class="r"><button class="btn" id="cp" type="button">Copy result</button><button class="gh" id="sc" type="button">Back</button></div></div>';
-$("cp").onclick=()=>cp($("cp"),t);$("sc").onclick=()=>{S={ph:"setup"};enter=true;draw()};return}
+const k=S.dk||dkey(new Date()),d=ST.daily[k],t="YouKnowBall daily "+k+"\n"+d.g+"\nScore "+d.s+"\n"+location.origin+location.pathname+"?d="+k;
+$("app").innerHTML='<div class="card narrow"><h3>'+(S.ph==="dd"?"You already played today":"Daily complete")+'</h3><div class="grid">'+d.g+'</div><div class="row"><span>Score</span><b>'+d.s+'</b></div><p class="who">Daily streak: <b>'+streak()+'</b>. New players tomorrow.</p><div class="r"><button class="btn" id="cp" type="button">Share result</button><button class="gh" id="sc" type="button">Back</button></div></div>';
+$("cp").onclick=()=>share(t,$("cp"));$("sc").onclick=()=>{S={ph:"setup"};enter=true;draw()};return}
 if(S.ph==="end"){
 const L=S.pl.slice().sort((a,b)=>b.s-a.s),a=tm(0),b=tm(1);
 const w=S.teams?(a===b?"The teams tie.":"<b>Team "+(a>b?"A":"B")+"</b> wins."):(()=>{const x=L.filter(y=>y.s===L[0].s).map(y=>esc(y.n)).join(" and ");return L.length>1?(x.includes(" and ")?x+" share the win.":"<b>"+x+"</b> takes it."):(S.mode==="s"?(S.nb?"Run over. New personal best!":"Run over. Personal best "+(ST.sb||0)):"Solo run finished.")})();
-$("app").innerHTML='<div class="card narrow end">'+chBanner()+'<h3>Full time</h3>'+(S.teams?'<div class="stat"><div><b>'+a+'</b><span>Team A</span></div><div><b>'+b+'</b><span>Team B</span></div></div>':"")+L.map((x,k)=>'<div class="row'+(k?"":" top1")+'" style="animation-delay:'+k*40+'ms"><span><i class="rk">'+(k+1)+'</i>'+esc(x.n)+'</span><b data-to="'+x.s+'" data-from="0">'+x.s+'</b></div>').join("")+'<div class="grid" aria-label="Round results">'+grid(S.res)+'</div><p class="who">'+w+'</p><div class="r"><button class="btn" id="ag" type="button">Play again</button><button class="gh" id="cp" type="button">Copy results</button><button class="gh" id="chf" type="button">Challenge a friend</button><button class="gh" id="sc" type="button">Settings</button></div></div>';
-$("ag").onclick=()=>start(S.mode);$("sc").onclick=()=>{S={ph:"setup"};enter=true;draw()};$("cp").onclick=()=>cp($("cp"),"YouKnowBall: "+L.map(x=>x.n+" "+x.s).join(", ")+"\n"+grid(S.res));$("chf").onclick=()=>challenge($("chf"));return}
+$("app").innerHTML='<div class="card narrow end">'+chBanner()+'<h3>Full time</h3>'+(S.teams?'<div class="stat"><div><b>'+a+'</b><span>Team A</span></div><div><b>'+b+'</b><span>Team B</span></div></div>':"")+L.map((x,k)=>'<div class="row'+(k?"":" top1")+'" style="animation-delay:'+k*40+'ms"><span><i class="rk">'+(k+1)+'</i>'+esc(x.n)+'</span><b data-to="'+x.s+'" data-from="0">'+x.s+'</b></div>').join("")+'<div class="grid" aria-label="Round results">'+grid(S.res)+'</div><p class="who">'+w+'</p><div class="r"><button class="btn" id="ag" type="button">Play again</button><button class="gh" id="cp" type="button">Share results</button><button class="gh" id="chf" type="button">Challenge a friend</button><button class="gh" id="sc" type="button">Settings</button></div></div>';
+$("ag").onclick=()=>start(S.mode);$("sc").onclick=()=>{S={ph:"setup"};enter=true;draw()};
+const lab=S.mode==="p"?"Career path":S.mode==="s"?"Solo":"Classic";
+const solved=S.res.filter(x=>x>0).length,top=Math.max(...S.pl.map(x=>x.s));
+const stxt="YouKnowBall ⚽ "+(S.teams?lab+" — Team A "+a+" – "+b+" Team B":lab+" — solved "+solved+"/"+S.res.length+" · top "+top+" pts")+"\n"+grid(S.res)+"\n"+rematchLink(S.mode);
+$("cp").onclick=()=>share(stxt,$("cp"));$("chf").onclick=()=>challenge($("chf"));return}
 const p=S.deck[S.i],N=S.deck.length,cs=S.cs||(S.cs=clues(p)),tr=tier(p);
 if(!S.t0)S.t0=Date.now();
 const fresh=S.nk!==S.i+":"+S.sh;S.nk=S.i+":"+S.sh;
@@ -324,7 +334,7 @@ function wordleImg(){const cols={ok:"#33cc7a",mid:"#f2c94c",no:"#2a3a31"},lab=["
       for(let c=0;c<5;c++){const st=g?g.c[c].s:"",xx=left+c*(cw+gap),yy=y+20;x.fillStyle=g?cols[st]:"#14231a";x.fillRect(xx,yy,cw,76);
         if(g){x.fillStyle=st==="mid"?"#2a2000":st==="ok"?"#04210f":"#f4f1e6";x.font="700 30px Barlow,Arial";x.textAlign="center";x.fillText(String(g.c[c].l).slice(0,12),xx+cw/2,yy+48);x.textAlign="left"}}}})}
 function wordleEnd(){const t=WS.t,n=WS.res?WS.res.w:WS.g.length,won=WS.res?WS.res.w>0:WS.won;const grid=WS.res?WS.res.g:WS.g.map(r=>r.c.map(x=>x.s==="ok"?"🟩":x.s==="mid"?"🟨":"⬛").join("")).join("\n");if(WS.key&&!WS.res){ST.wd=ST.wd||{};ST.wd[WS.key]={w:won?n:0,g:grid};ST.ls=Math.max(ST.ls||0,streak());sv()}
-$("app").innerHTML='<div class="card narrow"><div class="rev"><div class="rv-main"><small>'+(won?"Got it in "+n+(n===1?" try":" tries"):"Out of tries")+'</small><h2 data-fit>'+spl(t.n)+'</h2><p>'+esc(t.nat)+', '+esc(t.pos)+', '+esc(t.cl)+'</p></div></div><pre class="gridp">'+esc(grid)+'</pre><div class="r"><button class="btn" id="cpw" type="button">Copy result</button><button class="gh" id="bkw" type="button">Back</button></div></div>';addShot(wordleImg());post();$("cpw").onclick=()=>cp($("cpw"),"YouKnowBall Wordle "+(WS.key||"random")+" "+(won?n:"X")+"/6\n"+grid);$("bkw").onclick=()=>{S={ph:"setup"};enter=true;draw()}}
+$("app").innerHTML='<div class="card narrow"><div class="rev"><div class="rv-main"><small>'+(won?"Got it in "+n+(n===1?" try":" tries"):"Out of tries")+'</small><h2 data-fit>'+spl(t.n)+'</h2><p>'+esc(t.nat)+', '+esc(t.pos)+', '+esc(t.cl)+'</p></div></div><pre class="gridp">'+esc(grid)+'</pre><div class="r"><button class="btn" id="cpw" type="button">Share result</button><button class="gh" id="bkw" type="button">Back</button></div></div>';addShot(wordleImg());post();$("cpw").onclick=()=>share("YouKnowBall ⚽ Wordle — "+(won?n:"X")+"/6 "+(WS.key?"daily "+WS.key:"random puzzle")+"\n"+grid+"\n"+(WS.key?location.origin+location.pathname+"?d="+WS.key:rematchLink("w")),$("cpw"));$("bkw").onclick=()=>{S={ph:"setup"};enter=true;draw()}}
 const GDIFF={e:{minClub:15,min:3,one:0},m:{minClub:8,min:2,one:0},h:{minClub:4,min:1,one:3}},LOOSE={minClub:4,min:1,one:0};
 function gridGen(d,pool){
   const lv=GDIFF[d]||GDIFF.m,cnt={},cc={},gc={};
@@ -365,7 +375,7 @@ function gridImg(){return cardImg("Grid","Boxes "+GS.f.filter(Boolean).length+"/
 function gridEnd(){const n=GS.f.filter(Boolean).length,d=GS.d||"m";
 if(!GS.rec){GS.rec=1;ST.gg=(ST.gg||0)+1;if(GS.max<99){ST.gb=Math.max(ST.gb||0,n);ST.gbd=ST.gbd||{};ST.gbd[d]=Math.max(ST.gbd[d]||0,n)}sv()}
 let ms="";GS.f.forEach((x,i)=>{if(x)return;const r=GS.rows[Math.floor(i/3)],c=GS.cols[i%3],a=P.filter(p=>p.cl.split(", ").includes(r)&&p.nat===c).slice(0,3).map(p=>p.n);ms+='<div class="row"><span>'+esc(r)+' + '+esc(c)+'</span><b class="ans">'+esc(a.join(", "))+'</b></div>'});
-$("app").innerHTML='<div class="card narrow"><h3>Grid finished</h3><div class="stat"><div><b>'+n+'/9</b><span>Boxes filled</span></div><div><b>'+(GS.max<99?gbest(d)+"/9":"-")+'</b><span>'+(GS.max<99?"Best on "+GDN[d]:"Practice run")+'</span></div></div>'+(ms?'<p class="who">Boxes you missed, and who fits</p>'+ms:"")+'<div class="r"><button class="btn" id="gan" type="button">New grid</button><button class="gh" id="gbk" type="button">Back</button></div></div>';addShot(gridImg());post();$("gan").onclick=()=>gridStart();$("gbk").onclick=()=>{S={ph:"setup"};enter=true;draw()}}
+$("app").innerHTML='<div class="card narrow"><h3>Grid finished</h3><div class="stat"><div><b>'+n+'/9</b><span>Boxes filled</span></div><div><b>'+(GS.max<99?gbest(d)+"/9":"-")+'</b><span>'+(GS.max<99?"Best on "+GDN[d]:"Practice run")+'</span></div></div>'+(ms?'<p class="who">Boxes you missed, and who fits</p>'+ms:"")+'<div class="r"><button class="btn" id="gan" type="button">New grid</button><button class="gh" id="gsh" type="button">Share result</button><button class="gh" id="gbk" type="button">Back</button></div></div>';addShot(gridImg());post();$("gan").onclick=()=>gridStart();$("gsh").onclick=()=>share("YouKnowBall ⚽ Grid — "+n+"/9 boxes on "+GDN[d]+"\n"+rematchLink("g"),$("gsh"));$("gbk").onclick=()=>{S={ph:"setup"};enter=true;draw()}}
 
 setup();post();
 /* open a challenge or a dated daily straight from the link; no params = the normal home screen */
