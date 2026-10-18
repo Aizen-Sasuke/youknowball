@@ -9,6 +9,18 @@ const TN=["Easy","Medium","Hard"];
    "League" column and every pool picker read from here, so labels can never drift. */
 const LGL={PL:"Premier League",LL:"La Liga",SA:"Serie A",BL:"Bundesliga",L1:"Ligue 1",OT:"Other"};
 const LGO=Object.entries(LGL);
+/* current club + "data refreshed" date come from the offline Wikidata refresh (js/data.js).
+   CURTIDY is presentation only: Wikidata labels carry legal suffixes, and the stored value
+   in CURRENT stays exactly as sourced. */
+const DATA_DATE=(typeof DATA_UPDATED==="string")?DATA_UPDATED:"";
+function CURTIDY(c){return ({"Los Angeles FC":"LAFC"})[c]||c
+ .replace(/^Club Atlético /,"").replace(/^Clube de Regatas do /,"")
+ .replace(/^FC /,"").replace(/^AS /,"").replace(/^AC /,"").replace(/^SSC /,"").replace(/^OGC /,"")
+ .replace(/ Club de Fútbol$/,"").replace(/ Football Club$/,"").replace(/ Sports Club$/,"")
+ .replace(/ FC$/,"").replace(/ F\.C\.$/,"").replace(/ CF$/,"").replace(/ SFC$/,"")
+ .replace(/ SC$/,"").replace(/ J\.K\.$/,"").replace(/ S\.K\.$/,"").replace(/ F\.R\.$/,"")
+ .replace(/ Istanbul$/,"")}
+function curOf(n){return (typeof CURRENT==="object"&&CURRENT&&CURRENT[n])?CURTIDY(CURRENT[n]):""}
 const TIERTXT=["Easy tier","Star tier","Legend tier"];
 const tier=p=>HARD.has(p.n)?2:EASY.has(p.n)?0:1;
 const DL='<datalist id="dl">'+P.map(p=>p.n).sort().map(n=>'<option value="'+n.replace(/"/g,"")+'">').join("")+'</datalist>';
@@ -98,13 +110,14 @@ const tm=k=>S.pl.filter((_,i)=>i%2===k).reduce((a,x)=>a+x.s,0);
 const grid=r=>r.map(x=>x===0?"⬛":x<=2?"🟩":x<=4?"🟨":"🟧").join("");
 /* player card: shown under the reveal (and on the Wordle result) for the round's answer.
    Built only from fields the deck already carries, so it can never disagree with the clues. */
-function pcard(p){const tr=tier(p),lg=LGL[p.lg]||p.lg,stars=tr?"★".repeat(tr):"";
+function pcard(p){const tr=tier(p),lg=LGL[p.lg]||p.lg,stars=tr?"★".repeat(tr):"",cur=curOf(p.n);
  return '<section class="pcard" aria-label="Player card: '+esc(p.n)+'">'
  +'<div class="pc-h"><h4>'+esc(p.n)+'</h4><span class="pc-t'+(tr===2?" leg":"")+'" aria-label="Tier: '+TIERTXT[tr]+(tr?" ("+tr+(tr===1?" star":" stars")+")":"")+'"><b aria-hidden="true">'+stars+'</b>'+TN[tr]+'</span></div>'
  +'<dl class="pc-l">'
  +'<div><dt>Nationality</dt><dd>'+esc(p.nat)+'</dd></div>'
  +'<div><dt>Position</dt><dd>'+esc(p.pos)+'</dd></div>'
  +'<div><dt>Born</dt><dd>'+esc(p.yr)+'</dd></div>'
+ +(cur?'<div><dt>'+(cur==="Retired"?"Status":"Current club")+'</dt><dd>'+esc(cur)+'</dd></div>':'')
  +'<div><dt>League</dt><dd>'+esc(lg)+'</dd></div>'
  +'<div class="wide"><dt>Clubs</dt><dd>'+esc(p.cl)+'</dd></div>'
  +'<div class="wide"><dt>'+esc(p.fl||"Fact")+'</dt><dd>'+esc(p.ft)+'</dd></div>'
@@ -194,7 +207,7 @@ if(S.ph==="wd"){stopT();wordleRender();return}
 if(S.ph==="grid"){stopT();gridRender();return}
 stopT();
 if(S.ph==="st"){
-$("app").innerHTML='<div class="card narrow"><h3>Your stats on this device</h3><div class="stat"><div><b>'+ST.g+'</b><span>Games played</span></div><div><b>'+ST.solved+'</b><span>Players solved</span></div><div><b>'+ST.best+'</b><span>Best streak in a game</span></div><div><b>'+(ST.fast?(ST.fast/1000).toFixed(1)+"s":"None yet")+'</b><span>Fastest solve</span></div><div><b>'+streak()+'</b><span>Daily streak</span></div><div><b>'+Object.keys(ST.daily).length+'</b><span>Dailies played</span></div></div>'+distHtml()+'<button class="gh" id="bk" type="button">Back</button></div>';
+$("app").innerHTML='<div class="card narrow"><h3>Your stats on this device</h3><div class="stat"><div><b>'+ST.g+'</b><span>Games played</span></div><div><b>'+ST.solved+'</b><span>Players solved</span></div><div><b>'+ST.best+'</b><span>Best streak in a game</span></div><div><b>'+(ST.fast?(ST.fast/1000).toFixed(1)+"s":"None yet")+'</b><span>Fastest solve</span></div><div><b>'+streak()+'</b><span>Daily streak</span></div><div><b>'+Object.keys(ST.daily).length+'</b><span>Dailies played</span></div></div>'+distHtml()+aboutData()+'<button class="gh" id="bk" type="button">Back</button></div>';
 $("bk").onclick=()=>{S={ph:"setup"};enter=true;draw()};return}
 if(S.ph==="dd"||(S.ph==="end"&&S.mode==="d")){
 const k=S.dk||dkey(new Date()),d=ST.daily[k],t="YouKnowBall daily "+k+"\n"+d.g+"\nScore "+d.s+"\n"+location.origin+location.pathname+"?d="+k;
@@ -345,6 +358,13 @@ function distHtml(){
  if(!rows.some(r=>r[1].some(n=>n)))return"";
  const mx=Math.max(1,...rows.map(r=>Math.max(...r[1])));
  return '<h3>Solved at clue</h3><div class="dist">'+rows.map(r=>'<div class="drow"><span class="dlab">'+r[0]+'</span><div class="dbars" role="img" aria-label="'+r[0]+" solved at "+r[1].map((n,i)=>"clue "+(i+1)+": "+n).join(", ")+'">'+r[1].map((n,i)=>'<span class="dbar"><em>'+ (i+1) +'</em><span class="dtrk"><i style="--w:'+(n?Math.max(8,Math.round(n/mx*100)):0)+'%"></i></span><b>'+n+'</b></span>').join("")+'</div></div>').join("")+'</div>'}
+
+/* honest note about where player information comes from and when it was last refreshed.
+   Current clubs are a point-in-time snapshot, so the date is shown rather than implied. */
+function aboutData(){if(!DATA_DATE)return"";
+ return '<p class="aboutd">Player profiles (nationality, position, birth year, clubs) were last checked against '+
+ '<a href="https://www.wikidata.org/" target="_blank" rel="noopener noreferrer">Wikidata<span class="sr"> (opens in a new tab)</span></a> on '+
+ '<b>'+esc(DATA_DATE)+'</b>. Current clubs are a snapshot and can change; birth years are cross-checked against English Wikipedia.</p>'}
 
 /* resume: a serializable snapshot of an in-progress Classic / Career / Solo game, kept in the
    existing stats object (ST.rg inside ykbs). Versioned, and anything incompatible is dropped

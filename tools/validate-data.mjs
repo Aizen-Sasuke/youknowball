@@ -12,12 +12,12 @@ const src = readFileSync(file, "utf8");
 
 let data;
 try {
-  data = new Function(src + ";\nreturn { RAW, SPR, LG };")();
+  data = new Function(src + ";\nreturn { RAW, SPR, LG, CURRENT, DATA_UPDATED };")();
 } catch (e) {
   console.error("FAIL  data.js does not evaluate:", e.message);
   process.exit(1);
 }
-const { RAW, SPR, LG } = data;
+const { RAW, SPR, LG, CURRENT, DATA_UPDATED } = data;
 
 const LEAGUES = new Set(["PL", "LL", "SA", "BL", "L1", "OT"]);
 const EXPECTED_ROWS = 279;
@@ -120,9 +120,31 @@ else bad("row count", "got " + recs.length + ", expected " + EXPECTED_ROWS);
   else bad("tier values only \"0\" or \"1\"", badTier.slice(0, 6).map(p => p.n + "=\"" + p.r + "\"").join(", ") + (badTier.length > 6 ? " +" + (badTier.length - 6) : ""));
 }
 
+// ---- Wikidata enrichment: DATA_UPDATED is a plain ISO date ----
+{
+  if (typeof DATA_UPDATED === "string" && /^\d{4}-\d{2}-\d{2}$/.test(DATA_UPDATED)
+      && !Number.isNaN(Date.parse(DATA_UPDATED)))
+    ok("DATA_UPDATED is a valid YYYY-MM-DD date", DATA_UPDATED);
+  else bad("DATA_UPDATED is a valid YYYY-MM-DD date", "got " + JSON.stringify(DATA_UPDATED));
+}
+
+// ---- Wikidata enrichment: CURRENT keys resolve to real players and carry a value ----
+{
+  const names = new Set(recs.map(p => p.n));
+  const entries = Object.entries(CURRENT || {});
+  const stray = entries.filter(([k]) => !names.has(k)).map(([k]) => k);
+  const empty = entries.filter(([, v]) => typeof v !== "string" || !v.trim()).map(([k]) => k);
+  const retired = entries.filter(([, v]) => v === "Retired").length;
+  if (!entries.length) bad("CURRENT has entries", "CURRENT is empty");
+  else if (stray.length) bad("every CURRENT key resolves to a real player", stray.length + " stray: " + stray.slice(0, 6).join(", ") + (stray.length > 6 ? " ..." : ""));
+  else ok("every CURRENT key resolves to a real player", entries.length + " entries (" + retired + " retired, " + (entries.length - retired) + " current clubs)");
+  if (empty.length) bad("every CURRENT value is a non-empty string", empty.slice(0, 6).join(", "));
+  else if (entries.length) ok("every CURRENT value is a non-empty string");
+}
+
 console.log("");
 if (fails.length) {
   console.error(fails.length + " check(s) FAILED: " + fails.join(", "));
   process.exit(1);
 }
-console.log("All data checks passed — " + recs.length + " players, " + Object.keys(LG).length + " league tags, " + SPR.split("\n").filter(l => l.trim()).length + " special clues.");
+console.log("All data checks passed — " + recs.length + " players, " + Object.keys(LG).length + " league tags, " + SPR.split("\n").filter(l => l.trim()).length + " special clues, " + Object.keys(CURRENT || {}).length + " current-club entries.");
