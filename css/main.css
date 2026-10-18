@@ -153,6 +153,13 @@ input:disabled{opacity:.55}
 .dtrk i{position:absolute;inset:0 auto 0 0;width:var(--w,0);background:var(--ink);transition:width .3s var(--ease)}
 .dbar b{flex:none;min-width:2em;text-align:right;font:800 17px var(--fd);color:var(--ink)}
 @media(max-width:440px){.drow{flex-direction:column;align-items:stretch;gap:4px}.dlab{width:auto}}
+/* achievements (stats screen): text label + written requirement, never colour-only */
+.ach{list-style:none;margin:0 0 6px;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.ach li{padding:12px 14px;background:var(--soft);border-left:5px solid var(--line);opacity:.55}
+.ach li.on{opacity:1;border-left-color:var(--ink)}
+.ach li b{display:block;font:700 14px var(--fd);letter-spacing:.08em;text-transform:uppercase;color:var(--ink)}
+.ach li.on b:before{content:"✓ "}
+.ach li span{display:block;margin-top:4px;font:500 13px/1.4 var(--fb);color:var(--mut)}
 .badge{padding:2px 8px;font:700 14px var(--fd);letter-spacing:.14em;text-transform:uppercase;color:var(--ink);border:1px solid var(--line)}
 .badge.h{background:var(--ink);color:var(--it);border-color:var(--ink)}
 .aboutd{margin:0 0 22px;padding:14px 16px;font:500 14px/1.5 var(--fb);color:var(--mut);background:var(--soft);border-left:5px solid var(--ink)}

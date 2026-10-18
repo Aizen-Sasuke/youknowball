@@ -204,7 +204,7 @@ draw()}
 function guess(skip){
 const p=S.deck[S.i],me=S.pl[S.t];let pn=false;
 if(!skip){const v=norm($("g").value);if(!v){setErr("er","Type a name first");$("g").focus();return}
-if(hit(v,p)){stopT();const q=pts(),b=S.last===S.t?1:0,tb=tier(p),tot=q+b+tb;me.s+=tot;S.last=S.t;S.run++;S.done=true;S.res.push(S.sh);S.msg=me.n+" scored "+tot+" ("+q+(b?", +1 streak":"")+(tb?", +"+tb+" "+TN[tb].toLowerCase()+" bonus":"")+")";S.err="";ST.solved++;bumpDist(S.mode,S.sh);const ms=Date.now()-S.t0;if(!ST.fast||ms<ST.fast)ST.fast=ms;ST.best=Math.max(ST.best,S.run);sv();beep(660,.15);setTimeout(()=>beep(990,.2),120);buzz(VIB.solve);confetti();S.fx="glow";draw();return}
+if(hit(v,p)){stopT();const q=pts(),b=S.last===S.t?1:0,tb=tier(p),tot=q+b+tb;me.s+=tot;S.last=S.t;S.run++;S.done=true;S.res.push(S.sh);S.msg=me.n+" scored "+tot+" ("+q+(b?", +1 streak":"")+(tb?", +"+tb+" "+TN[tb].toLowerCase()+" bonus":"")+")";S.err="";ST.solved++;bumpDist(S.mode,S.sh);ST.lg=ST.lg||{};ST.lg[p.lg]=(ST.lg[p.lg]||0)+1;{const dc=Math.floor(+p.yr/10)*10;ST.era=ST.era||{};ST.era[dc]=(ST.era[dc]||0)+1}const ms=Date.now()-S.t0;if(!ST.fast||ms<ST.fast)ST.fast=ms;ST.best=Math.max(ST.best,S.run);sv();achCheck();beep(660,.15);setTimeout(()=>beep(990,.2),120);buzz(VIB.solve);confetti();S.fx="glow";draw();return}
 beep(180,.2,"square");buzz(VIB.bad);S.fx="shake";if(S.pen){me.s=Math.max(0,me.s-1);pn=true}}
 if(S.sh<5){S.sh++;S.t=(S.t+1)%S.pl.length;S.err=(skip?"Skipped. ":"Not quite"+(pn?", minus 1. ":". "))+"Clue "+S.sh+" goes to "+S.pl[S.t].n+"."}
 else{stopT();S.done=true;S.last=-1;S.run=0;S.res.push(0);S.msg="Nobody got that one";S.err="";if(S.solo)S.solo.miss++}
@@ -228,8 +228,8 @@ if(S.ph==="wd"){stopT();wordleRender();return}
 if(S.ph==="grid"){stopT();gridRender();return}
 stopT();
 if(S.ph==="st"){
-$("app").innerHTML='<div class="card narrow"><h3>Your stats on this device</h3><div class="stat"><div><b>'+ST.g+'</b><span>Games played</span></div><div><b>'+ST.solved+'</b><span>Players solved</span></div><div><b>'+ST.best+'</b><span>Best streak in a game</span></div><div><b>'+(ST.fast?(ST.fast/1000).toFixed(1)+"s":"None yet")+'</b><span>Fastest solve</span></div><div><b>'+streak()+'</b><span>Daily streak</span></div><div><b>'+Object.keys(ST.daily).length+'</b><span>Dailies played</span></div></div>'+distHtml()+aboutData()+'<button class="gh" id="bk" type="button">Back</button></div>';
-$("bk").onclick=()=>{S={ph:"setup"};enter=true;draw()};return}
+$("app").innerHTML='<div class="card narrow"><h3>Your stats on this device</h3><div class="stat"><div><b>'+ST.g+'</b><span>Games played</span></div><div><b>'+ST.solved+'</b><span>Players solved</span></div><div><b>'+ST.best+'</b><span>Best streak in a game</span></div><div><b>'+(ST.fast?(ST.fast/1000).toFixed(1)+"s":"None yet")+'</b><span>Fastest solve</span></div><div><b>'+streak()+'</b><span>Daily streak</span></div><div><b>'+Object.keys(ST.daily).length+'</b><span>Dailies played</span></div></div>'+distHtml()+achList()+aboutData()+'<button class="btn" id="psh" type="button" style="width:100%;margin:4px 0 12px">Share profile card</button><button class="gh" id="bk" type="button">Back</button></div>';
+$("psh").onclick=()=>shareProfile($("psh"));$("bk").onclick=()=>{S={ph:"setup"};enter=true;draw()};return}
 if(S.ph==="dd"||(S.ph==="end"&&S.mode==="d")){
 const k=S.dk||dkey(new Date()),d=ST.daily[k],t="YouKnowBall daily "+k+"\n"+d.g+"\nScore "+d.s+"\n"+location.origin+location.pathname+"?d="+k;
 $("app").innerHTML='<div class="card narrow"><h3>'+(S.ph==="dd"?"You already played today":"Daily complete")+'</h3><div class="grid">'+d.g+'</div><div class="row"><span>Score</span><b>'+d.s+'</b></div><p class="who">Daily streak: <b>'+streak()+'</b>. New players tomorrow.</p><div class="r"><button class="btn" id="cp" type="button">Share result</button><button class="gh" id="sc" type="button">Back</button></div></div>';
@@ -380,6 +380,55 @@ function distHtml(){
  const mx=Math.max(1,...rows.map(r=>Math.max(...r[1])));
  return '<h3>Solved at clue</h3><div class="dist">'+rows.map(r=>'<div class="drow"><span class="dlab">'+r[0]+'</span><div class="dbars" role="img" aria-label="'+r[0]+" solved at "+r[1].map((n,i)=>"clue "+(i+1)+": "+n).join(", ")+'">'+r[1].map((n,i)=>'<span class="dbar"><em>'+ (i+1) +'</em><span class="dtrk"><i style="--w:'+(n?Math.max(8,Math.round(n/mx*100)):0)+'%"></i></span><b>'+n+'</b></span>').join("")+'</div></div>').join("")+'</div>'}
 
+/* Achievements: a small local set derived from the stats already held in the existing `ykbs`
+   object (ST). No second store: `ST.ach` only remembers *when* a badge was earned, and `ST.lg` /
+   `ST.era` add tiny per-league / per-era solve counts. Every badge carries a text label and a
+   written requirement (or a written "Earned <date>"), so meaning never depends on colour alone. */
+const ACH=[
+ ["first","First solve","Solve your first player"],
+ ["comeback","Five-clue comeback","Solve a round on clue 5 or later"],
+ ["streak5","On a roll","Win 5 turns in a row in one game"],
+ ["wordle1","Wordle in one","Crack a Wordle on the first guess"],
+ ["solved100","Century","Solve 100 players"],
+ ["lgPL","Premier League master","Solve 5 Premier League players"],
+ ["lgLL","La Liga master","Solve 5 La Liga players"],
+ ["lgSA","Serie A master","Solve 5 Serie A players"],
+ ["lgBL","Bundesliga master","Solve 5 Bundesliga players"],
+ ["lgL1","Ligue 1 master","Solve 5 Ligue 1 players"],
+ ["lgOT","Other-league master","Solve 5 players from outside the big five"],
+ ["era","All-era explorer","Solve a player from every era on the team sheet"]];
+const LGM={lgPL:"PL",lgLL:"LL",lgSA:"SA",lgBL:"BL",lgL1:"L1",lgOT:"OT"};
+const achOn=id=>!!(ST.ach&&ST.ach[id]);
+function achEarned(id){if(id==="first")return (ST.solved||0)>=1;
+ if(id==="comeback")return DMODES.some(d=>distRow(d[0])[4]>0);
+ if(id==="streak5")return (ST.best||0)>=5;
+ if(id==="wordle1")return ST.w1===1||Object.values(ST.wd||{}).some(w=>w&&w.w===1);
+ if(id==="solved100")return (ST.solved||0)>=100;
+ if(id==="era")return ERAS.every(e=>((ST.era||{})[+e[0].slice(2)]||0)>0);
+ return ((ST.lg||{})[LGM[id]]||0)>=5}
+function achCheck(){ST.ach=ST.ach||{};const got=[];
+ ACH.forEach(a=>{if(!ST.ach[a[0]]&&achEarned(a[0])){ST.ach[a[0]]=Date.now();got.push(a)}});
+ if(!got.length)return;
+ sv();beep(990,.2);toast("Badge earned: "+got.map(a=>a[1]).join(", "))}
+const achEarnedCount=()=>ACH.filter(a=>achOn(a[0])).length;
+function achList(){return '<h3 style="margin:24px 0 10px">Badges</h3><p class="who" style="margin:0 0 10px">'+achEarnedCount()+' of '+ACH.length+' earned on this device.</p><ul class="ach">'+ACH.map(a=>'<li'+(achOn(a[0])?' class="on"':"")+'><b>'+esc(a[1])+'</b><span>'+(achOn(a[0])?"Earned "+new Date(ST.ach[a[0]]).toLocaleDateString():(a[2]))+'</span></li>').join("")+'</ul>'}
+/* word-wrap for the canvas card (measureText-based, so it can never overflow) */
+function wrapTxt(x,txt,maxw){const out=[];let cur="";txt.split(" ").forEach(w=>{const t=cur?cur+" "+w:w;if(cur&&x.measureText(t).width>maxw){out.push(cur);cur=w}else cur=t});if(cur)out.push(cur);return out}
+const profileText=()=>"YouKnowBall ⚽ my profile\nPlayers solved "+(ST.solved||0)+" · Games played "+(ST.g||0)+" · Best streak "+(ST.best||0)+"\nBadges "+achEarnedCount()+"/"+ACH.length+": "+(ACH.filter(a=>achOn(a[0])).map(a=>a[1]).join(", ")||"none yet")+"\n"+location.origin+location.pathname;
+function profileImg(){const earned=ACH.filter(a=>achOn(a[0]));
+ return cardImg("Player profile",(ST.solved||0)+" players solved · "+(ST.g||0)+" games played",x=>{
+  const rows=[["Games played",ST.g||0],["Players solved",ST.solved||0],["Best streak in a game",ST.best||0],["Fastest solve",ST.fast?(ST.fast/1000).toFixed(1)+"s":"—"],["Daily streak",streak()],["Dailies played",Object.keys(ST.daily||{}).length]];
+  x.font="700 46px Barlow,Arial";
+  rows.forEach((r,i)=>{const y=432+i*84;x.fillStyle="#a3b9a9";x.fillText(r[0],70,y);x.fillStyle="#f4f1e6";x.textAlign="right";x.fillText(String(r[1]),1010,y);x.textAlign="left"});
+  x.fillStyle="#f2c94c";x.font="800 54px 'Barlow Condensed',Arial";x.fillText("BADGES "+earned.length+"/"+ACH.length,70,1046);
+  x.fillStyle="#f4f1e6";x.font="700 36px Barlow,Arial";
+  let y=1112;wrapTxt(x,earned.map(a=>a[1]).join(" · ")||"None yet — play a game to earn one",940).forEach(ln=>{if(y>1260)return;x.fillText(ln,70,y);y+=48})})}
+/* share the profile: the canvas card when the device can draw one, otherwise the text summary
+   (the image path is the same one the Daily/Grid/Wordle result cards use, so it degrades the same way) */
+function shareProfile(btn){const c=profileImg();
+ if(!c){toast("This device can't draw the card — sharing your profile as text");share(profileText(),btn);return}
+ addShot(c)}
+
 /* honest note about where player information comes from and when it was last refreshed.
    Current clubs are a point-in-time snapshot, so the date is shown rather than implied. */
 function aboutData(){if(!DATA_DATE)return"";
@@ -455,7 +504,7 @@ function wordleImg(){const cols={ok:"#33cc7a",mid:"#f2c94c",no:"#2a3a31"},lab=["
       if(g){x.fillStyle="#f4f1e6";x.font="800 40px 'Barlow Condensed',Arial";x.fillText(g.p.n.toUpperCase().slice(0,30),left,y)}
       for(let c=0;c<5;c++){const st=g?g.c[c].s:"",xx=left+c*(cw+gap),yy=y+20;x.fillStyle=g?cols[st]:"#14231a";x.fillRect(xx,yy,cw,76);
         if(g){x.fillStyle=st==="mid"?"#2a2000":st==="ok"?"#04210f":"#f4f1e6";x.font="700 30px Barlow,Arial";x.textAlign="center";x.fillText(String(g.c[c].k||g.c[c].l).slice(0,12),xx+cw/2,yy+48);x.textAlign="left"}}}})}
-function wordleEnd(){const t=WS.t,n=WS.res?WS.res.w:WS.g.length,won=WS.res?WS.res.w>0:WS.won;const grid=WS.res?WS.res.g:WS.g.map(r=>r.c.map(x=>x.s==="ok"?"🟩":x.s==="mid"?"🟨":"⬛").join("")).join("\n");if(WS.key&&!WS.res){ST.wd=ST.wd||{};ST.wd[WS.key]={w:won?n:0,g:grid};ST.ls=Math.max(ST.ls||0,streak());sv()}
+function wordleEnd(){const t=WS.t,n=WS.res?WS.res.w:WS.g.length,won=WS.res?WS.res.w>0:WS.won;const grid=WS.res?WS.res.g:WS.g.map(r=>r.c.map(x=>x.s==="ok"?"🟩":x.s==="mid"?"🟨":"⬛").join("")).join("\n");if(won&&n===1)ST.w1=1;if(WS.key&&!WS.res){ST.wd=ST.wd||{};ST.wd[WS.key]={w:won?n:0,g:grid};ST.ls=Math.max(ST.ls||0,streak());sv()}achCheck()
 $("app").innerHTML='<div class="card narrow"><div class="rev"><div class="rv-main"><small>'+(won?"Got it in "+n+(n===1?" try":" tries"):"Out of tries")+'</small><h2 data-fit>'+spl(t.n)+'</h2><p>'+esc(t.nat)+', '+esc(t.pos)+', '+esc(t.cl)+'</p></div></div>'+pcard(t)+'<pre class="gridp">'+esc(grid)+'</pre><div class="r"><button class="btn" id="cpw" type="button">Share result</button><button class="gh" id="bkw" type="button">Back</button></div></div>';addShot(wordleImg());post();$("cpw").onclick=()=>share("YouKnowBall ⚽ Wordle — "+(won?n:"X")+"/6 "+(WS.key?"daily "+WS.key:"random puzzle")+"\n"+grid+"\n"+(WS.key?location.origin+location.pathname+"?d="+WS.key:rematchLink("w")),$("cpw"));$("bkw").onclick=()=>{S={ph:"setup"};enter=true;draw()}}
 const GDIFF={e:{minClub:15,min:3,one:0},m:{minClub:8,min:2,one:0},h:{minClub:4,min:1,one:3}},LOOSE={minClub:4,min:1,one:0};
 function gridGen(d,pool){
