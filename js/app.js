@@ -343,6 +343,12 @@ $("tg").onclick=()=>{const r=document.documentElement,d=r.dataset.theme!=="light
 
 let RM=null,R=null,OL=null,HS=null,olCounted="";
 let RSRC="",invDone=false;
+/* a per-tab player id: PeerJS hands out a new peer id on every reconnect, so room scores
+   key off this instead, letting a dropped player rejoin by code and resume their score.
+   sessionStorage keeps it stable across a reload in the same tab but not across tabs. */
+const PID=(()=>{try{let x=sessionStorage.getItem("ykbpid");if(!x){x=Date.now().toString(36)+Math.random().toString(36).slice(2,8);sessionStorage.setItem("ykbpid",x)}return x}catch(e){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}})();
+const pKey=p=>String((p&&p.presence&&p.presence.pid)||(p&&p.pid)||(p&&p.peer)||"");
+const myKey=()=>PID;
 function invGo(){if(!invOk||!RM||!$("jc")||invDone)return;invDone=true;$("jc").value=INV;if(cfg.on)setTimeout(()=>$("jn").click(),500);else $("on").focus()}
 function peerRoom(){const NS="ykbx-";return{join:(name,host)=>new Promise((res,rej)=>{
 if(!window.Peer){rej({code:"unavailable"});return}
@@ -360,7 +366,7 @@ pr.on("open",id=>{myid=id;mem[id]={};done=true;res(api)});
 pr.on("error",e=>{if(!done)rej({code:e.type==="unavailable-id"?"limit_reached":"upstream_error"})});
 pr.on("open",()=>olStatus(""));
 pr.on("disconnected",()=>{olStatus("Lost signal, reconnecting...");try{pr.reconnect()}catch(e){}});
-pr.on("connection",c=>{if(locked||Object.keys(mem).length>=8){c.on("open",()=>{try{c.send({t:"x",m:locked?"This game already started.":"This room is full."})}catch(e){}setTimeout(()=>{try{c.close()}catch(e){}},400)});return}conns.push(c);c.on("open",()=>{mem[c.peer]={};bcast()});c.on("data",d=>{if(d&&d.t==="p"){mem[c.peer]=Object.assign(mem[c.peer]||{},d.p);bcast()}});const gone=()=>{conns=conns.filter(x=>x!==c);delete mem[c.peer];bcast()};c.on("close",gone);c.on("error",gone)})}
+pr.on("connection",c=>{/* a started room still accepts connections so a dropped player can rejoin and resume; only the 8-player cap rejects. */if(Object.keys(mem).length>=8){c.on("open",()=>{try{c.send({t:"x",m:"This room is full (8 players max)."})}catch(e){}setTimeout(()=>{try{c.close()}catch(e){}},400)});return}conns.push(c);c.on("open",()=>{mem[c.peer]={};bcast()});c.on("data",d=>{if(d&&d.t==="p"){mem[c.peer]=Object.assign(mem[c.peer]||{},d.p);bcast()}});const gone=()=>{conns=conns.filter(x=>x!==c);delete mem[c.peer];bcast()};c.on("close",gone);c.on("error",gone)})}
 else{pr=new Peer(undefined,ice);
 pr.on("open",id=>{myid=id;mem[id]={};hc=pr.connect(NS+name,{reliable:true});hc.on("open",()=>{done=true;res(api)});hc.on("data",d=>{if(d&&d.t==="s"){mem=d.m;fire()}if(d&&d.t==="x"){if(OL)OL.gone=1;olFail(d.m)}});hc.on("close",()=>{mem={};fire();olRetry()});setTimeout(()=>{if(!done)rej({code:"not_found"})},9000)});
 pr.on("error",e=>{if(!done)rej({code:e.type==="peer-unavailable"?"not_found":"upstream_error"})})}
@@ -369,70 +375,137 @@ pr.on("error",e=>{if(!done)rej({code:e.type==="peer-unavailable"?"not_found":"up
 const CODE="abcdefghjkmnpqrstuvwxyz23456789",genCode=()=>Array.from({length:6},()=>CODE[Math.floor(Math.random()*CODE.length)]).join("");
 const NOROOM="Online play is not available right now. Check your connection and reload.";
 function olSetup(h){
-h+='<h3>Your name</h3><input id="on" maxlength="14" autocomplete="off" placeholder="Name" aria-label="Your name" value="'+esc(cfg.on||"")+'"><div class="r" style="margin-top:12px">'+opt("rd","Rounds",[[5,"5"],[10,"10"],[15,"15"]],[5,10,15].includes(cfg.R)?cfg.R:10)+opt("sp","New clue every",[[10,"10 seconds"],[15,"15 seconds"],[20,"20 seconds"]],cfg.sp||15)+poolCtl(cfg.pool)+'<div style="flex:1 1 100%"><label class="lab" for="ors">Room seed, optional</label><input id="ors" maxlength="10" placeholder="Empty = random" style="margin-top:6px" autocomplete="off" aria-label="Room seed, optional" value="'+esc(cfg.rs||"")+'"></div>'+poolExtra(cfg.pool)+'</div><div class="opts"><label><input type="checkbox" id="o_pen"'+(cfg.pen?" checked":"")+'>Wrong guess costs 1</label><label><input type="checkbox" id="o_snd"'+(cfg.snd?" checked":"")+'>Sound effects</label><label><input type="checkbox" id="o_hap"'+(cfg.hap?" checked":"")+'>Vibration</label></div><div class="step"><i>03</i>Open the room</div><button class="btn" id="hs" type="button" style="width:100%">Host a room</button><h3 style="margin:22px 0 10px">Or join a friend</h3><div class="r"><input id="jc" maxlength="6" autocomplete="off" autocapitalize="off" placeholder="Room code" aria-label="Room code"><button class="gh" id="jn" type="button" style="flex:0 0 auto">Join room</button></div><div class="err" aria-live="polite" id="er">'+(RM?"":NOROOM)+'</div><p class="who" style="font-size:13px">'+(RSRC==="claude"?"Everyone playing must open this page while signed in to claude.ai with access to it. People on a public link can not join a room.":"Share the code with friends anywhere. Everyone opens this page and taps Join room.")+'</p></div>';
+h+='<h3>Your name</h3><input id="on" maxlength="14" autocomplete="off" placeholder="Name" aria-label="Your name" value="'+esc(cfg.on||"")+'"><div class="r" style="margin-top:12px">'+opt("rd","Rounds",[[5,"5"],[10,"10"],[15,"15"]],[5,10,15].includes(cfg.R)?cfg.R:10)+opt("sp","New clue every",[[10,"10 seconds"],[15,"15 seconds"],[20,"20 seconds"]],cfg.sp||15)+opt("og","Guessing",[["live","Live race"],["sim","Simultaneous"]],cfg.og||"live")+poolCtl(cfg.pool)+'<div style="flex:1 1 100%"><label class="lab" for="ors">Room seed, optional</label><input id="ors" maxlength="10" placeholder="Empty = random" style="margin-top:6px" autocomplete="off" aria-label="Room seed, optional" value="'+esc(cfg.rs||"")+'"></div>'+poolExtra(cfg.pool)+'</div><div class="opts"><label><input type="checkbox" id="o_otm"'+(cfg.otm?" checked":"")+'>Teams, A vs B</label><label><input type="checkbox" id="o_pen"'+(cfg.pen?" checked":"")+'>Wrong guess costs 1</label><label><input type="checkbox" id="o_snd"'+(cfg.snd?" checked":"")+'>Sound effects</label><label><input type="checkbox" id="o_hap"'+(cfg.hap?" checked":"")+'>Vibration</label></div><div class="step"><i>03</i>Open the room</div><button class="btn" id="hs" type="button" style="width:100%">Host a room</button><h3 style="margin:22px 0 10px">Or join a friend</h3><div class="r"><input id="jc" maxlength="6" autocomplete="off" autocapitalize="off" placeholder="Room code" aria-label="Room code"><button class="gh" id="jn" type="button" style="flex:0 0 auto">Join room</button></div><div class="err" aria-live="polite" id="er">'+(RM?"":NOROOM)+'</div><p class="who" style="font-size:13px">'+(RSRC==="claude"?"Everyone playing must open this page while signed in to claude.ai with access to it. People on a public link can not join a room.":"Share the code with friends anywhere. Everyone opens this page and taps Join room.")+'</p></div>';
 $("app").innerHTML=h;
 document.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{cfg.mode=b.dataset.m;save();enter=true;setup();post()});
 document.querySelectorAll(".opts input").forEach(i=>i.onchange=()=>{cfg[i.id.slice(2)]=i.checked;save()});
-const go=host=>{const nm=$("on").value.trim(),code=host?genCode():$("jc").value.trim().toLowerCase();if(!RM){setErr("er",NOROOM);return}if(!nm){setErr("er","Add your name first");return}if(!host&&!/^[a-z0-9]{6}$/.test(code)){setErr("er","Enter the 6 character room code");return}cfg.on=nm;if(host){cfg.R=+$("rd").value;cfg.sp=+$("sp").value;cfg.pool=$("pl").value;if($("ors"))cfg.rs=$("ors").value.trim().toLowerCase().replace(/[^a-z0-9]/g,"").slice(0,10)}save();olStart(host,nm,code)};
+const go=host=>{const nm=$("on").value.trim(),code=host?genCode():$("jc").value.trim().toLowerCase();if(!RM){setErr("er",NOROOM);return}if(!nm){setErr("er","Add your name first");return}if(!host&&!/^[a-z0-9]{6}$/.test(code)){setErr("er","Enter the 6 character room code");return}cfg.on=nm;if(host){cfg.R=+$("rd").value;cfg.sp=+$("sp").value;cfg.og=$("og").value;cfg.otm=$("o_otm").checked;cfg.pool=$("pl").value;if($("ors"))cfg.rs=$("ors").value.trim().toLowerCase().replace(/[^a-z0-9]/g,"").slice(0,10)}save();olStart(host,nm,code)};
 $("hs").onclick=()=>go(true);$("jn").onclick=()=>go(false);$("on").onkeydown=e=>{if(e.key==="Enter"&&$("jc").value.trim())$("jn").click()}}
 const olCard=(h,c)=>{$("app").innerHTML='<div class="card '+(c||"narrow")+'">'+h+'<p id="ost" class="who ost"></p></div>';post()};
 const oclHtml=(cl,fin)=>cl.map((c,i)=>!fin&&i===cl.length-1?'<div class="cl slab nw"><em class="cn">Clue '+(i+1)+' of 5</em><span class="ct" data-fit>'+esc(c)+'</span></div>':'<div class="cl tk'+(!fin&&i===cl.length-2?" dr":"")+'" style="--age:'+((fin?cl.length:cl.length-1)-i)+'"><em>'+(i+1)+'</em><span>'+esc(c)+'</span></div>').join("");
+/* room settings, shown in the lobby before the host starts (identical for every player) */
+const osetHtml=s=>{const t=(s&&s.set)||{};return '<p class="who oset" role="note">Room settings: <b>'+(t.r||"")+'</b> rounds · new clue every <b>'+(t.sp||"")+'s</b> · Teams <b>'+(t.teams?"on":"off")+'</b> · <b>'+(t.gmode==="sim"?"Simultaneous":"Live race")+'</b></p>'};
 function olStatus(m){const e=$("ost");if(e)e.textContent=m||""}
 let rejoins=0,WL=null;
-function olRetry(){if(!OL||OL.host||OL.gone||S.ph!=="ol")return;rejoins++;if(rejoins>3){olFail("Lost the connection to the host.");return}olStatus("Connection lost. Rejoining ("+rejoins+"/3)...");const n=OL.nm,c=OL.code;setTimeout(()=>{if(OL&&!OL.host&&!OL.gone&&S.ph==="ol")olStart(false,n,c)},2000)}
+function olRetry(){if(!OL||OL.host||OL.gone||OL.hgone||S.ph!=="ol")return;rejoins++;if(rejoins>3){olHostEnd("Lost the connection to the host.");return}olStatus("Connection lost. Rejoining ("+rejoins+"/3)...");const n=OL.nm,c=OL.code;setTimeout(()=>{if(OL&&!OL.host&&!OL.gone&&S.ph==="ol")olStart(false,n,c)},2000)}
 async function keepAwake(){try{if("wakeLock" in navigator&&OL&&OL.host)WL=await navigator.wakeLock.request("screen")}catch(e){}}
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&OL&&OL.host)keepAwake()});
 function olFail(m){if(OL)clearInterval(OL.iv);olCard('<h3>'+esc(m)+'</h3><button class="gh" id="lv" type="button">Back</button>');$("lv").onclick=olLeave}
-function olLeave(){if(OL){clearInterval(OL.iv);OL.un.forEach(u=>{try{u()}catch(e){}})}try{R&&R.leave()}catch(e){}R=null;OL=null;HS=null;S={ph:"setup"};enter=true;draw()}
-const me=()=>{const p=R&&R.peers().find(x=>x.isMe&&x.sameTab);return p?p.peer:""};
+/* the host left (or the link to it folded): keep the last scores on screen instead of a bare error */
+function olHostEnd(m){if(!OL)return;const H=OL.H;clearInterval(OL.iv);OL.un.forEach(u=>{try{u()}catch(e){}});OL.hgone=1;
+ const sc=(H&&H.sc?H.sc.slice():[]).sort((a,b)=>b[1]-a[1]);
+ olCard('<h3>Host left</h3><p class="who">'+esc(m)+' The scores below are the last seen.</p>'+(sc.length?sc.map((x,k)=>'<div class="row'+(k?"":" top1")+'"><span><i class="rk">'+(k+1)+'</i>'+esc(x[0])+(x[2]===me()?" (you)":"")+'</span><b>'+x[1]+'</b></div>').join(""):"")+'<div class="r"><button class="gh" id="lv" type="button">Back</button></div>');
+ const e=$("lv");if(e)e.onclick=olLeave}
+function olLeave(){const wasHost=!!(OL&&OL.host);
+ if(OL){clearInterval(OL.iv);OL.un.forEach(u=>{try{u()}catch(e){}})}
+ const fin=()=>{try{R&&R.leave()}catch(e){}R=null;OL=null;HS=null;S={ph:"setup"};enter=true;draw()};
+ if(wasHost&&R){try{R.presence({bye:1})}catch(e){}setTimeout(fin,400)}else fin()}
+const me=()=>myKey(); /* the local player is identified by the stable per-tab id, not the transient peer id */
 async function olStart(host,nm,code,retry){
-OL={host,nm,code,k:0,un:[],sig:"",H:null,ps:[],last:""};S={ph:"ol"};enter=true;
+OL={host,nm,code,k:0,un:[],sig:"",H:null,ps:[],last:"",hold:null,hgone:0};S={ph:"ol"};enter=true;
 olCard('<h3>Connecting</h3><p class="who">Opening room '+esc(code.toUpperCase())+'</p>');
-try{R=await RM.join("ykb-"+code,host);await R.presence({nm,at:Date.now()});if(!host)rejoins=0}catch(e){const c=e&&e.code;if(host&&c==="limit_reached"&&!retry){olStart(host,nm,genCode(),1);return}olFail(c==="not_found"?"No room with that code. Check it and try again.":"Could not open the room ("+(c||"error")+").");return}
-if(host){keepAwake();HS={ph:"lobby",r:0,N:cfg.R,sh:0,clues:[],tl:0,res:null,sc:{},fb:{},deck:[],idx:-1,ans:null,k:{},T:cfg.sp||15,at:Date.now()};OL.iv=setInterval(hostTick,1000)}
-OL.un.push(R.onPeers(ch=>{if(!OL)return;OL.ps=ch.peers;if(OL.host)hostSync();else{const h=ch.peers.filter(p=>p.kind==="viewer"&&!p.isMe&&p.presence.h).sort((a,b)=>a.presence.h.at-b.presence.h.at)[0];OL.H=h?h.presence.h:null}olRender()},e=>olFail("Connection lost ("+e.code+").")))}
-const snap=()=>({ph:HS.ph,r:HS.r,N:HS.N,sh:HS.sh,cl:HS.clues.slice(0,HS.sh),tl:HS.tl,T:HS.T,w:Math.max(1,6-HS.sh),res:HS.res,sc:Object.entries(HS.sc).map(([id,x])=>[x.nm,x.s,id]),fb:HS.fb,at:HS.at});
+try{R=await RM.join("ykb-"+code,host);await R.presence({nm,at:Date.now(),pid:PID});if(!host)rejoins=0}catch(e){const c=e&&e.code;if(host&&c==="limit_reached"&&!retry){olStart(host,nm,genCode(),1);return}olFail(c==="not_found"?"No room with that code. Check it and try again.":"Could not open the room ("+(c||"error")+").");return}
+if(host){keepAwake();HS={ph:"lobby",r:0,N:cfg.R,sh:0,clues:[],tl:0,res:null,sc:{},fb:{},subs:{},deck:[],idx:-1,ans:null,k:{},T:cfg.sp||15,at:Date.now(),gmode:cfg.og||"live",set:{r:cfg.R,sp:cfg.sp||15,teams:!!cfg.otm,gmode:cfg.og||"live"}};OL.iv=setInterval(hostTick,1000)}
+OL.un.push(R.onPeers(ch=>{if(!OL)return;OL.ps=ch.peers;
+ if(!OL.host&&ch.peers.some(p=>p.presence&&p.presence.bye)){olHostEnd("The host left the room.");return}
+ if(OL.host)hostSync();else{const h=ch.peers.filter(p=>p.kind==="viewer"&&!p.isMe&&p.presence.h).sort((a,b)=>a.presence.h.at-b.presence.h.at)[0];OL.H=h?h.presence.h:null}olRender()},e=>olFail("Connection lost ("+e.code+").")))}
+const snap=()=>{const act=Object.keys(HS.sc).filter(id=>HS.sc[id].active);return {ph:HS.ph,r:HS.r,N:HS.N,sh:HS.sh,cl:HS.clues.slice(0,HS.sh),tl:HS.tl,T:HS.T,w:Math.max(1,6-HS.sh),res:HS.res,sc:Object.entries(HS.sc).map(([id,x])=>[x.nm,x.s,id,x.tm]),fb:HS.fb,at:HS.at,gmode:HS.gmode,set:HS.set,nsub:act.filter(id=>HS.subs[id]).length,nact:act.length}};
 function hostPub(){const j=JSON.stringify(snap());if(j===OL.last)return;OL.last=j;R.presence({h:JSON.parse(j)}).catch(()=>{})}
 function hostSync(){
-const ids={};
-OL.ps.filter(p=>p.kind==="viewer"&&p.presence.nm).forEach(p=>{ids[p.peer]=1;const nm=String(p.presence.nm).slice(0,14);if(!HS.sc[p.peer])HS.sc[p.peer]={nm,s:0};else HS.sc[p.peer].nm=nm;
-const g=p.presence.g;if(!p.isMe&&g&&g.r===HS.r&&g.k>(HS.k[p.peer]||0)){HS.k[p.peer]=g.k;hostGuess(p.peer,g.t)}});
-Object.keys(HS.sc).forEach(id=>{if(!ids[id])delete HS.sc[id]});hostPub()}
+Object.keys(HS.sc).forEach(id=>{HS.sc[id].active=false});
+OL.ps.filter(p=>p.kind==="viewer"&&p.presence.nm).forEach(p=>{
+ const id=pKey(p);const nm=String(p.presence.nm).slice(0,14);
+ if(!HS.sc[id])HS.sc[id]={nm,s:0,tm:null};
+ HS.sc[id].nm=nm;HS.sc[id].active=true;
+ const g=p.presence.g;
+ if(!p.isMe&&g&&g.r===HS.r){
+   if(HS.gmode==="sim")hostSub(id,g.t,g.k);
+   else if(g.k>(HS.k[id]||0)){HS.k[id]=g.k;hostGuess(id,g.t)}
+ }});
+hostPub();if(HS.gmode==="sim")maybeResolve()}
 function hostGuess(id,text){
 if(HS.ph!=="play"||HS.res||!HS.sc[id])return;const v=norm(String(text).slice(0,40));if(!v)return;const a=HS.ans;
 if(hit(v,a)){const pts=Math.max(1,6-HS.sh)+tier(a);HS.sc[id].s+=pts;HS.res={n:a.n,nat:a.nat,ft:a.ft,by:HS.sc[id].nm,pts};HS.tl=5;HS.fb[id]=HS.k[id]+":1"}
 else{if(cfg.pen)HS.sc[id].s=Math.max(0,HS.sc[id].s-1);HS.fb[id]=HS.k[id]+":0"}
 hostPub();olRender()}
-function hostNext(){HS.idx++;if(HS.idx>=HS.deck.length){HS.ph="end";return}const a=HS.deck[HS.idx];HS.ans=a;HS.r=HS.idx+1;HS.clues=clues(a);HS.sh=1;HS.tl=HS.T;HS.res=null;HS.fb={}}
-function hostTick(){if(!HS)return;if(HS.ph==="play"){HS.tl--;if(HS.tl<=0){if(HS.res)hostNext();else if(HS.sh<5){HS.sh++;HS.tl=HS.T}else{HS.res={n:HS.ans.n,nat:HS.ans.nat,ft:HS.ans.ft,by:"",pts:0};HS.tl=5}}}hostPub();olRender()}
+/* simultaneous, host-authoritative: guests' sealed guesses are held in HS.subs (never published),
+   the step resolves once — when every active player has submitted, or the timer runs out — and
+   only then does HS.res carry anyone's guess to the other clients. */
+function hostSub(id,text,k){
+ if(!HS||HS.ph!=="play"||HS.gmode!=="sim"||HS.res)return;
+ const cur=HS.subs[id];if(cur&&+cur.k&&+k&&+k<+cur.k)return; /* changed guess / duplicate re-send: keep the latest */
+ HS.subs[id]={t:String(text||"").slice(0,40),k:+k||0};
+ maybeResolve();hostPub();olRender()}
+function maybeResolve(){
+ if(!HS||HS.ph!=="play"||HS.gmode!=="sim"||HS.res)return;
+ const ids=Object.keys(HS.sc).filter(id=>HS.sc[id].active);
+ if(ids.length&&ids.every(id=>HS.subs[id]))hostResolve()}
+function hostResolve(){
+ const a=HS.ans;if(!a)return;const all=[];let solved=false;
+ Object.keys(HS.sc).forEach(id=>{
+   const rec=HS.sc[id],sub=HS.subs[id];
+   if(!rec.active&&!sub)return; /* players who left without locking in are not in this step */
+   const t=sub?sub.t:"";
+   let ok=false,pts=0;
+   if(t&&hit(norm(t),a)){ok=true;pts=Math.max(1,6-HS.sh)+tier(a);rec.s+=pts;solved=true}
+   else if(t&&cfg.pen)rec.s=Math.max(0,rec.s-1);
+   all.push({id:id,nm:rec.nm,t:t,ok:ok,pts:pts,tm:rec.tm});});
+ const first=all.filter(x=>x.ok)[0];
+ HS.res={n:a.n,nat:a.nat,ft:a.ft,solved:solved,all:all,sh:HS.sh,by:first?first.nm:"",pts:first?first.pts:0};
+ HS.tl=5;HS.subs={};
+ hostPub();olRender()}
+function hostNext(){HS.idx++;if(HS.idx>=HS.deck.length){HS.ph="end";return}const a=HS.deck[HS.idx];HS.ans=a;HS.r=HS.idx+1;HS.clues=clues(a);HS.sh=1;HS.tl=HS.T;HS.res=null;HS.fb={};HS.subs={}}
+function hostTick(){if(!HS)return;if(HS.ph==="play"){HS.tl--;if(HS.tl<=0){if(HS.gmode==="sim"){if(HS.res){if(HS.res.solved)hostNext();else if(HS.sh<5){HS.sh++;HS.tl=HS.T;HS.res=null;HS.subs={}}else hostNext()}else hostResolve()}else{if(HS.res)hostNext();else if(HS.sh<5){HS.sh++;HS.tl=HS.T}else{HS.res={n:HS.ans.n,nat:HS.ans.nat,ft:HS.ans.ft,by:"",pts:0};HS.tl=5}}}}hostPub();olRender()}
 function hostStart(){const pool=P.filter(x=>inPool(x,cfg.pool));if(!pool.length){olStatus("No players match "+POOLNAME(cfg.pool)+". Pick another filter (or Everyone).");return}
  seed=cfg.rs?hs("kr"+cfg.rs):null;HS.deck=shuf(pool).slice(0,Math.min(HS.N,pool.length));seed=null;
- HS.N=HS.deck.length;HS.idx=-1;Object.values(HS.sc).forEach(x=>x.s=0);HS.ph="play";HS.at=Date.now();hostNext();hostPub();olRender();try{R.lock(true)}catch(e){}}
+ HS.N=HS.deck.length;HS.idx=-1;HS.gmode=cfg.og||"live";HS.set={r:HS.N,sp:HS.T,teams:!!cfg.otm,gmode:HS.gmode};
+ Object.keys(HS.sc).sort().forEach((id,k)=>{HS.sc[id].s=0;HS.sc[id].tm=cfg.otm?k%2:null});
+ HS.subs={};HS.ph="play";HS.at=Date.now();hostNext();hostPub();olRender();try{R.lock(true)}catch(e){}}
 function olRender(){
-if(!OL||!R||OL.gone)return;const s=OL.host?snap():OL.H;
+if(!OL||!R||OL.gone||OL.hgone)return;const s=OL.host?snap():OL.H;
 if(!s){olCard('<h3>Waiting for the host</h3><p class="who">Room '+esc(OL.code.toUpperCase())+'. If the host left, start a new room.</p><button class="gh" id="lv" type="button">Leave</button>');$("lv").onclick=olLeave;OL.sig="w";return}
-const sig=s.ph+":"+(s.ph==="play"?s.r:"");
-if(sig!==OL.sig){OL.sig=sig;OL.nc=0;OL.rv=0;OL.cf=0;olBuild(s)}
+const sim=s.ph==="play"&&s.gmode==="sim";
+const sig=s.ph+":"+(s.ph==="play"?(s.r+(sim?":"+s.sh:"")):"");
+if(sig!==OL.sig){OL.sig=sig;OL.nc=0;OL.rv=0;OL.cf=0;OL.fk=0;OL.simc=0;OL.hold=null;olBuild(s)}
 olUpd(s)}
 function olBuild(s){
 const lv='<button class="gh" id="lv" type="button">Leave room</button>';
-if(s.ph==="lobby"){olCard('<h3>Room code</h3><div class="code" data-fit>'+esc(OL.code.toUpperCase())+'</div><p class="who" style="margin-top:0">Friends open this page, tap Online, and join with this code.</p><div class="chips" id="opl"></div>'+(RSRC==="peer"?'<button class="gh" id="inv" type="button" style="margin-bottom:14px">Copy invite link</button>':"")+(OL.host?'<div class="r"><button class="btn" id="st2" type="button">Start game</button>'+lv+'</div>':'<p class="who">Waiting for the host to start.</p>'+lv));$("lv").onclick=olLeave;if(OL.host)$("st2").onclick=hostStart;if($("inv"))$("inv").onclick=()=>{const u=location.origin+location.pathname+"?room="+OL.code;if(navigator.share)navigator.share({title:"YouKnowBall",text:"Join my room",url:u}).catch(()=>{});else cp($("inv"),u)};return}
-if(s.ph==="end"){const L=s.sc.slice().sort((a,b)=>b[1]-a[1]);olCard('<h3>Full time</h3>'+L.map((x,k)=>'<div class="row'+(k?"":" top1")+'" style="animation-delay:'+k*40+'ms"><span><i class="rk">'+(k+1)+'</i>'+esc(x[0])+(x[2]===me()?" (you)":"")+'</span><b data-to="'+x[1]+'" data-from="0">'+x[1]+'</b></div>').join("")+'<p class="who"><b>'+esc(L.length&&L[0][1]>0?L[0][0]:"Nobody")+'</b> takes it.</p><div class="r">'+(OL.host?'<button class="btn" id="ag2" type="button">Back to lobby</button>':"")+lv+'</div>');if(L.length&&L[0][1]>0)confetti();$("lv").onclick=olLeave;if(OL.host)$("ag2").onclick=()=>{HS.ph="lobby";hostPub();olRender();try{R.lock(false)}catch(e){}};return}
-olCard('<div class="hd bug"><span class="rd">Round <b id="orn"></b></span><span class="wp">Worth <b id="ow"></b></span><span id="ot" class="tn"></span></div><div class="stack" id="ocl"></div><div class="bar"><i id="otb"></i></div><div id="orv"></div><input id="og" aria-label="Your guess" placeholder="Type a name" autocomplete="off" autocapitalize="off"><div class="err" id="ofb"></div><div class="r"><button class="btn" id="ogb" type="button">Guess</button>'+lv+'</div><div class="strip" id="obw"><span class="strip-l">Live scores</span><div id="obd"></div></div>',"play olp");
-$("lv").onclick=olLeave;$("ogb").onclick=olGuess;$("og").onkeydown=e=>{if(e.key==="Enter")olGuess()};$("og").focus({preventScroll:true})}
+if(s.ph==="lobby"){olCard('<h3>Room code</h3><div class="code" data-fit>'+esc(OL.code.toUpperCase())+'</div><p class="who" style="margin-top:0">Friends open this page, tap Online, and join with this code.</p>'+osetHtml(s)+'<div class="chips" id="opl"></div>'+(RSRC==="peer"?'<button class="gh" id="inv" type="button" style="margin-bottom:14px">Copy invite link</button>':"")+(OL.host?'<div class="r"><button class="btn" id="st2" type="button">Start game</button>'+lv+'</div>':'<p class="who">Waiting for the host to start.</p>'+lv));$("lv").onclick=olLeave;if(OL.host)$("st2").onclick=hostStart;if($("inv"))$("inv").onclick=()=>{const u=location.origin+location.pathname+"?room="+OL.code;if(navigator.share)navigator.share({title:"YouKnowBall",text:"Join my room",url:u}).catch(()=>{});else cp($("inv"),u)};return}
+if(s.ph==="end"){const teams=!!(s.set&&s.set.teams),L=s.sc.slice().sort((a,b)=>b[1]-a[1]);let ta=0,tb=0;if(teams)L.forEach(x=>{if(x[3]===0)ta+=x[1];else if(x[3]===1)tb+=x[1]});olCard('<h3>Full time</h3>'+L.map((x,k)=>'<div class="row'+(k?"":" top1")+'" style="animation-delay:'+k*40+'ms"><span><i class="rk">'+(k+1)+'</i>'+esc(x[0])+(x[2]===me()?" (you)":"")+'</span><b data-to="'+x[1]+'" data-from="0">'+x[1]+'</b></div>').join("")+(teams?'<p class="who">Team A <b>'+ta+'</b> and Team B <b>'+tb+'</b>'+(ta===tb?" \u2014 the teams tie.":". Team "+(ta>tb?"A":"B")+" wins.")+'</p>':"")+'<p class="who"><b>'+esc(L.length&&L[0][1]>0?L[0][0]:"Nobody")+'</b> takes it.</p><div class="r">'+(OL.host?'<button class="btn" id="ag2" type="button">Back to lobby</button>':"")+lv+'</div>');if(L.length&&L[0][1]>0)confetti();$("lv").onclick=olLeave;if(OL.host)$("ag2").onclick=()=>{HS.ph="lobby";hostPub();olRender();try{R.lock(false)}catch(e){}};return}
+const sim=s.gmode==="sim";
+olCard('<div class="hd bug"><span class="rd">Round <b id="orn"></b></span><span class="wp">Worth <b id="ow"></b></span>'+(sim?'<span class="osub" id="osub" role="status"></span>':"")+'<span id="ot" class="tn"></span></div><div class="stack" id="ocl"></div><div class="bar"><i id="otb"></i></div><div id="orv"></div><input id="og" aria-label="Your guess" placeholder="Type a name" autocomplete="off" autocapitalize="off"><div class="err" id="ofb"></div><div class="r"><button class="btn" id="ogb" type="button">'+(sim?"Lock in guess":"Guess")+'</button>'+lv+'</div><div class="strip" id="obw"><span class="strip-l">Live scores</span><div id="obd"></div></div>',"play olp");
+$("lv").onclick=olLeave;$("ogb").onclick=olGuess;$("og").onkeydown=e=>{if(e.key==="Enter")olGuess()};if(!sim||!OL.hold)$("og").focus({preventScroll:true})}
 function olGuess(){
-const v=$("og").value.trim();if(!v||!OL)return;const s=OL.host?snap():OL.H;if(!s||s.res)return;
-OL.k++;$("og").value="";$("ofb").textContent="Checking";
+if(!OL)return;const v=$("og").value.trim();if(!v)return;const s=OL.host?snap():OL.H;if(!s||s.res)return;
+if(s.gmode==="sim"&&OL.hold)return; /* one sealed guess per clue step, until the reveal */
+OL.k=Date.now();
+if(s.gmode==="sim"){OL.hold=v.slice(0,40);$("og").value="";$("ofb").textContent="Locked in. Waiting for the others...";
+ if(OL.host)hostSub(me(),v,OL.k);else R.presence({g:{r:s.r,t:v.slice(0,40),k:OL.k}}).catch(()=>{});
+ if($("og")){$("og").disabled=true;$("ogb").disabled=true}
+ return}
+$("og").value="";$("ofb").textContent="Checking";
 if(OL.host){HS.k[me()]=OL.k;hostGuess(me(),v)}else R.presence({g:{r:s.r,t:v.slice(0,40),k:OL.k}}).catch(()=>{})}
 function olUpd(s){
-if(s.ph==="lobby"){$("opl").innerHTML=s.sc.map(r=>'<span class="chip">'+esc(r[0])+(r[2]===me()?" (you)":"")+'</span>').join("");return}
+if(s.ph==="lobby"){$("opl").innerHTML=s.sc.map(r=>'<span class="chip">'+(r[3]!=null?'<i class="tm">'+(r[3]?"B":"A")+'</i>':'')+esc(r[0])+(r[2]===me()?" (you)":"")+'</span>').join("");return}
 if(s.ph!=="play")return;
+const sim=s.gmode==="sim";
 $("orn").textContent=s.r+" of "+s.N;$("ow").textContent=s.w+(s.w===1?" point":" points");$("ot").textContent=s.tl+"s";
+if($("osub"))$("osub").textContent=s.nsub+"/"+s.nact+" locked in";
 const bar=$("otb");bar.style.width=Math.max(0,s.tl/(s.res?5:s.T)*100)+"%";bar.parentNode.classList.toggle("lo",!s.res&&s.tl<=5);$("ot").classList.toggle("lo",!s.res&&s.tl<=5);
 if(OL.nc!==s.cl.length){OL.nc=s.cl.length;say("Clue "+s.cl.length+". "+s.cl[s.cl.length-1]);$("ocl").innerHTML=oclHtml(s.cl,!!s.res);fit()}
-if(s.res&&!OL.rv){OL.rv=1;const rp=P.find(x=>x.n===s.res.n);say((s.res.by?s.res.by+" scored":"Nobody got it")+". The answer was "+s.res.n);$("ocl").innerHTML=oclHtml(s.cl,true);$("orv").innerHTML='<div class="rev'+(s.res.by?"":" miss")+'"><div class="rv-main"><small>'+(s.res.by?esc(s.res.by)+" scored "+s.res.pts:"Nobody got that one")+'</small><h2 data-fit>'+spl(s.res.n)+'</h2><p>'+esc(s.res.nat)+', '+esc(s.res.ft)+'</p></div><div class="pts">'+(s.res.by?'<span>+</span><b>'+s.res.pts+'</b>':'<b>0</b>')+'<em>pts</em></div></div>'+(rp?pcard(rp):"");fit();$("og").disabled=true;$("ogb").disabled=true}
-const f=s.fb[me()];if(f){const q=f.split(":");if(+q[0]===OL.k){$("ofb").textContent=q[1]==="1"?"Correct":"Not quite";if(q[1]==="1"&&!OL.cf){OL.cf=1;const ck=s.at+":"+s.r;if(olCounted!==ck){olCounted=ck;bumpDist("o",s.cl.length)}beep(660,.15);buzz(VIB.solve);confetti();pulse("glow")}else if(q[1]==="0"&&OL.fk!==q[0]){OL.fk=q[0];beep(180,.2,"square");buzz(VIB.bad);pulse("shake")}}}
-flipList($("obd"),s.sc.slice().sort((a,b)=>b[1]-a[1]).map(x=>'<div class="row" data-k="'+esc(String(x[2]))+'"><span>'+esc(x[0])+(x[2]===me()?" (you)":"")+'</span><b data-to="'+x[1]+'">'+x[1]+'</b></div>').join(""))}
+if(s.res&&!OL.rv){OL.rv=1;const rp=P.find(x=>x.n===s.res.n);
+ if(sim){const ok=s.res.all.filter(x=>x.ok);
+  say((ok.length?ok.map(x=>x.nm).join(", ")+" scored":"Nobody got it")+". The answer was "+s.res.n);
+  $("ocl").innerHTML=oclHtml(s.cl,true);
+  $("orv").innerHTML='<div class="rev'+(s.res.solved?"":" miss")+'"><div class="rv-main"><small>'+(ok.length?esc(ok.map(x=>x.nm).join(", "))+" solved clue "+s.res.sh:"Nobody got that one")+'</small><h2 data-fit>'+spl(s.res.n)+'</h2><p>'+esc(s.res.nat)+', '+esc(s.res.ft)+'</p></div></div>'
+   +'<p class="who">Everyone\'s guesses for clue '+s.res.sh+'</p><div class="simrev">'+s.res.all.map(x=>'<div class="row"><span>'+(x.tm!=null?'<i class="tm">'+(x.tm?"B":"A")+'</i>':'')+esc(x.nm)+(x.id===me()?" (you)":"")+'</span><b>'+(x.ok?"\u2713 ":"\u2717 ")+(x.t?esc(x.t):"no guess")+'</b></div>').join("")+'</div>'+(rp?pcard(rp):"")}
+ else{$("orv").innerHTML='<div class="rev'+(s.res.by?"":" miss")+'"><div class="rv-main"><small>'+(s.res.by?esc(s.res.by)+" scored "+s.res.pts:"Nobody got that one")+'</small><h2 data-fit>'+spl(s.res.n)+'</h2><p>'+esc(s.res.nat)+', '+esc(s.res.ft)+'</p></div><div class="pts">'+(s.res.by?'<span>+</span><b>'+s.res.pts+'</b>':'<b>0</b>')+'<em>pts</em></div></div>'+(rp?pcard(rp):"")}
+ fit();$("og").disabled=true;$("ogb").disabled=true}
+if(sim&&!s.res&&OL.hold&&$("ofb")){$("ofb").textContent='Locked in "'+OL.hold+'". Waiting for the others...';$("og").disabled=true;$("ogb").disabled=true}
+if(!sim){const f=s.fb[me()];if(f){const q=f.split(":");if(+q[0]===OL.k){$("ofb").textContent=q[1]==="1"?"Correct":"Not quite";if(q[1]==="1"&&!OL.cf){OL.cf=1;const ck=s.at+":"+s.r;if(olCounted!==ck){olCounted=ck;bumpDist("o",s.cl.length)}beep(660,.15);buzz(VIB.solve);confetti();pulse("glow")}else if(q[1]==="0"&&OL.fk!==q[0]){OL.fk=q[0];beep(180,.2,"square");buzz(VIB.bad);pulse("shake")}}}}
+if(sim&&s.res&&!OL.simc){OL.simc=1;const mine=s.res.all.filter(x=>x.id===me())[0];
+ if(mine&&mine.ok){const ck=s.at+":"+s.r;if(olCounted!==ck){olCounted=ck;bumpDist("o",s.res.sh)}beep(660,.15);buzz(VIB.solve);confetti();pulse("glow")}else if(mine&&mine.t){beep(180,.2,"square");buzz(VIB.bad);pulse("shake")}}
+flipList($("obd"),s.sc.slice().sort((a,b)=>b[1]-a[1]).map(x=>'<div class="row" data-k="'+esc(String(x[2]))+'"><span>'+(x[3]!=null?'<i class="tm">'+(x[3]?"B":"A")+'</i>':'')+esc(x[0])+(x[2]===me()?" (you)":"")+'</span><b data-to="'+x[1]+'">'+x[1]+'</b></div>').join(""))}
 
 function setup(){setup0();if(cfg.mode==="d"){dailyCal();addArchive()}}
 function dailyCal(){const card=$("app").querySelector(".card");if(!card)return;const now=new Date(),y=now.getFullYear(),m=now.getMonth(),first=new Date(y,m,1).getDay(),days=new Date(y,m+1,0).getDate(),today=now.getDate();
