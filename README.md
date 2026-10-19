@@ -4,13 +4,13 @@ A football quiz you can play with friends. Each round shows five clues about a p
 
 ## Modes
 
-- **Classic**: pass the phone around, with an optional turn timer, teams, and a letter-hint lifeline.
+- **Classic**: pass the phone around, with an optional turn timer, teams, and a letter-hint lifeline. Add **Simultaneous** guessing to seal each clue step: everyone locks a guess on the same clue, nothing is shown until one shared reveal, and the phone passes through a clean hand-off screen so no one sees another's guess.
 - **Solo**: you against the clock, one run, three strikes, personal best.
 - **Wordle**: six tries, colour hints for league, nation, position, club and birth year.
 - **Grid**: fill a 3×3 board where a club row meets a nation column.
 - **Career path**: clubs unlock one at a time, initials last.
 - **Daily**: the same five players for everyone each day, with a shareable result grid.
-- **Online**: host a room, share the 4-to-6 character code (or an invite link), and race friends on their own phones.
+- **Online**: host a room, share the 4-to-6 character code (or an invite link / join QR), and play friends on their own phones. Pick **Live race** (first correct guess wins the round) or **Simultaneous** (everyone locks a sealed guess per clue, revealed together); the host is authoritative and the room settings (rounds, per-round timer, teams, guessing mode) are shown in the lobby before the start. Scores survive a reconnect, a late joiner can still enter, and if the host leaves guests get a graceful end that keeps the last scores.
 
 ## Challenges
 
@@ -37,11 +37,13 @@ Or from this folder: `npx vercel --prod`.
 
 ## Offline / PWA
 
-The site registers a small service worker (`sw.js`): the app shell (HTML, CSS, JS, icons, manifest) is precached, and Google Fonts plus the PeerJS CDN are cached at runtime. After one online visit the game loads offline. Online rooms still need a live connection, obviously.
+The site registers a small service worker (`sw.js`): the app shell (HTML, CSS, JS, icons, manifest) is precached, and Google Fonts plus the PeerJS CDN are cached at runtime. After one online visit the game loads offline. Online rooms still need a live connection, obviously. The join-QR encoder is vendored in `js/qrcode.js` (no CDN) and precached with the shell.
 
 ## How online play works
 
 Online rooms use [PeerJS](https://peerjs.com/) (WebRTC) with its free public signaling server. The host's browser runs the game and everyone else connects to it, so there is no backend to run.
+
+The host is authoritative: it generates the deck, broadcasts the clue index, holds sealed simultaneous guesses privately until the one shared reveal, and owns the scores. A guest's score is keyed to a stable per-tab id, so closing the page and rejoining with the same code resumes their score and round. If the host leaves (or the connection cannot be re-established), guests get a "Host left" screen with the last scores seen instead of a bare error — there is no host migration, so the room cannot continue. Rooms accept connections after the game has started (up to 8 players) so a dropped guest can rejoin; a genuinely new late joiner also gets in, starting at 0.
 
 Some strict networks block direct connections. If a friend cannot join, add a TURN relay in `config.js`.
 
@@ -62,7 +64,7 @@ Some strict networks block direct connections. If a friend cannot join, add a TU
 - **Current club / freshness.** `js/data.js` ends with a machine-written block: `DATA_UPDATED` (the date the profiles were last checked against [Wikidata](https://www.wikidata.org/)) and `CURRENT`, a player-name → current-club map (`"Retired"` for retired players, omitted when the evidence is ambiguous). The player card shows it and the Stats screen prints the `DATA_UPDATED` date under "Your stats on this device", so staleness is visible rather than implied. The curated `clubs` field is kept consistent with it offline by `pipeline/sync_clubs.py`, which adds the senior clubs a row is missing (the Grid reads this field, so a stale list makes the Grid refuse a correct answer). Both steps are offline (`pipeline/enrich_players.py` and `pipeline/sync_clubs.py` — see `pipeline/README.md`); nothing is fetched at runtime. Current clubs are a point-in-time snapshot and do change.
 
 - Player facts are written from memory and may contain mistakes, **except** the machine-written ones: clues whose label is `Auto` (the `fact` field reads `Auto~…`, using the same `Label~Text` shape as the special clues) are built from Wikidata's structured fields by `pipeline/add_players.py` and can be replaced with a hand-written fact at any time. Open an issue or edit the data in `js/data.js` (the `RAW`, `SPR` and `LG` blocks). Recomputed by `node tools/data-audit.js` (parses the three blocks directly): 306 rows, no duplicate names, league tags cover all 306 players — spread PL 121, LL 69, SA 46, BL 29, L1 23, OT 18 — tier split 169 stars / 137 legends, and all 32 special-clue entries resolve to real players. The thinnest pool is still **OT** ("other", 18 players) — contributions welcome there.
-- Licensed under the MIT license (`LICENSE`).
+- Licensed under the MIT license (`LICENSE`). The vendored `js/qrcode.js` keeps its own MIT header (qrcode-generator v1.4.4 by Kazuhiko Arase).
 - Link preview uses an `og:image` meta tag pointing at the GitHub Pages icon URL; if you host elsewhere, update that absolute URL (social crawlers need it).
 
 ## Structure
@@ -70,5 +72,5 @@ Some strict networks block direct connections. If a friend cannot join, add a TU
 - `index.html`: markup shell · `manifest.webmanifest` + icons: installable app
 - `sw.js`: offline service worker · `404.html`: friendly 404 (Pages + Vercel)
 - `css/main.css`: the whole visual layer (Matchday Lower-Third)
-- `js/data.js`: player data · `js/fx.js`: presentation helpers (fit, FLIP, pulse, tween) · `js/app.js`: game logic and screens
+- `js/data.js`: player data · `js/fx.js`: presentation helpers (fit, FLIP, pulse, tween) · `js/qrcode.js`: vendored QR encoder (qrcode-generator v1.4.4, MIT — see the header in the file) · `js/app.js`: game logic and screens
 - See `REDESIGN.md` for changelog, test checklist and fragile-code notes.

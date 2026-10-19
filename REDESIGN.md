@@ -15,12 +15,14 @@
 
 ## Test checklist (run per mode at 375px and 1280px, dark and light)
 - Classic: add 2 names, wrong guess (shake + red flash), skip to clue 5, give up, correct guess (slab pulse, score tween), streak tab on 2nd solve, timer last 5s turns orange, teams on, letter hint.
+- Classic **Simultaneous**: 2–3 names, pass gate between players, no held guess visible before the reveal, one reveal shows all guesses + points, shared Next clue, per-player timer timeout, teams roll up.
 - Career path: clue 1-4 are career steps, initials last.
 - Daily: play 5 rounds, share grid, replay shows already-played, archive chips.
 - Wordle: 6 guesses to loss, win in <6, unknown name error, random puzzle.
 - Grid: fill a box, miss = shake, 3 strikes ends, New grid.
 - Solo: 10 rounds, endless with 3 strikes, personal best.
-- Online (2 phones): host, join by code, lobby list, start, correct/wrong feedback, scoreboard reorder glides, end, back to lobby.
+- Online (2 phones): host, join by code (or scan the lobby QR), lobby shows the room settings, start, correct/wrong feedback, scoreboard reorder glides, end, back to lobby.
+- Online **Simultaneous**: both lock in → auto-reveal; timer expiry → reveal; no held guess leaks; one player dropping mid-step resolves for the rest; rejoin by code resumes the score; host leaving shows the graceful "Host left" scores.
 - Long clue "Captained his country to a World Cup" and "Trent Alexander-Arnold" reveal: no overflow.
 - Reduced motion on: state changes still visible, nothing slides.
 
@@ -112,3 +114,19 @@ Small additive JS (display only): `S.nk`, `S.sk` for fresh-clue and streak-tab d
 - `pipeline/sync_clubs.py` re-derives each row's senior club history from the offline enrichment (`data/enrich.json`) and adds the clubs the row is missing. Deliberately conservative: canonical deck tokens only (vocabulary and Grid rows stay stable), youth / reserve / "B" / "II" / academy and Olympic-national teams skipped (plus a short hand-reviewed `MANUAL_EXCLUDE` for youth-only spells at clubs that do have a token), nothing removed, and each addition inserted at its chronological slot by its Wikidata start date so the Career-path clues still read as a career. This pass added **136 clubs across 102 rows**; the club vocabulary is unchanged (188 tokens). Every added club is a `P54` statement, listed with its start year in the gitignored `data/club-sync-report.csv`.
 - Ambiguity messages now name the candidates, capped at five with "and N more", in both Wordle and the Grid (`ambMsg()`), built from the same `matchPlayers()` result so the message cannot disagree with the match.
 - Cache: `ykb-v24`.
+
+## v17 — simultaneous guess mode, resilient rooms and a join QR
+### Item 1 — sealed/simultaneous guessing (Classic local + Online)
+- **Classic (local, pass-the-phone).** A new `Guessing` choice in setup (`cfg.gmo`: `turns` default, `sim`). In `sim` every player answers the *same* clue index; `S.sim`/`S.gs`/`S.pend`/`S.step` drive the flow: a "Pass to <next player>" gate (`simSeal`) hands the phone over, a clean intermediate screen collects that player's private guess (`simLock`), and once the last player has answered a **single** shared reveal (`simResolve`/`simRender`) shows the answer, everyone's guess, and the points. Nothing about a held guess is rendered before the reveal, so the hand-off cannot leak. Scoring is still fewer-clues-more-points by the clue index at submit; the shared "Next clue" button (`simAdvance`) appears only on the reveal, so no one can solo-advance or gain a skip advantage. The turn timer is reused as a per-player guess timer (documented in the reveal copy). Teams roll up exactly as in turn mode; the letter-hint lifeline stays per player. A simultaneous game is deliberately **not** resumable (`rgSave` skips `S.sim`) because the sealed state is on-screen, not in the snapshot.
+- **Online.** A room `Guessing` setting (`cfg.og`: `live` default, `sim`) shown in the lobby. The host is authoritative: it broadcasts the clue index (`sh`) and holds sealed guesses in `HS.subs` — **never** published before the reveal. `hostSub`/`maybeResolve`/`hostResolve` resolve a step when every *active* player has submitted or the per-round timer expires (non-submitters count as "no guess"); the reveal lists each player's guess with ✓/✗. On the wire the host keeps the latest submission per player (a stale re-send is ignored), but the client disables the input once locked in, so a player submits one committed guess per step.
+
+### Item 2 — resilient rooms and lobby settings
+- Lobby **room settings** (rounds, per-round timer, teams on/off, guessing mode) are captured in `HS.set` at start, shown to everyone before the start via `osetHtml()`, and persist for the room's lifetime.
+- Scores key off a **stable per-tab player id** (`PID`, `sessionStorage` `ykbpid`) rather than the transient WebRTC peer id, so a dropped guest who rejoins with the same code resumes their score and round. A departed player's record is kept on the host (`HS.sc[id].active=false`) rather than deleted, so the score survives their reconnect; active players are what resolution and the "n/m locked in" counter use.
+- A started room now **accepts** connections (up to the 8-player cap) so rejoin works; a genuinely new late joiner also enters, starting at 0. This is a behaviour change from the old hard lock.
+- **Host left.** Chosen approach: graceful end, not host migration (PeerJS gives no reliable election without a server, and a mid-game re-election could strand guesses). On leave the host broadcasts `presence({bye:1})`; guests detect it and call `olHostEnd()`, which keeps the last snapshot scores on screen. Retry exhaustion (3 attempts) falls back to the same screen. `olLeave` tears the room down from either side.
+- Online **teams** roll up A/B (assigned by sorted player id at start) and are shown on the lobby chips, scoreboard and end screen.
+
+### Item 3 — client-side join QR
+- `js/qrcode.js` is the vendored, unmodified **qrcode-generator v1.4.4 by Kazuhiko Arase (MIT)**; it is loaded locally (offline shell) with no CDN. `qrSvg()` renders the invite link (`location.origin + location.pathname + "?room=<code>"`, so it is correct under the `/youknowball/` subpath) to an inline SVG next to the code and copy-link. If the encoder is absent or throws, `qrSvg()` returns `null` and the QR block is hidden — the code/copy-link path still works.
+- Verified with an independent decoder (jsQR): the QR matrix and the rendered SVG path both decode to the exact subpath invite URL. Cache: `ykb-v25`.
