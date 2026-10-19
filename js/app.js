@@ -99,7 +99,7 @@ function confetti(){/* decorative fall is hidden by CSS (.cf{display:none}); sin
    every solve no longer builds 36 DOM nodes that nobody sees. To re-enable, delete this line. */
 if(HIDE_CONFETTI)return;const c=document.createElement("div");c.className="cf";const k=["var(--vl)","var(--ice)","var(--hot)","var(--ink)"];for(let i=0;i<36;i++){const e=document.createElement("i");e.style.left=Math.random()*100+"%";e.style.background=k[i%4];e.style.animationDelay=Math.random()*.4+"s";e.style.animationDuration=1+Math.random()+"s";c.appendChild(e)}document.body.appendChild(c);setTimeout(()=>c.remove(),2600)}
 const stopT=()=>{clearInterval(iv);iv=null};
-function runT(){stopT();if(!S.T)return;left=S.T;iv=setInterval(()=>{left-=.1;const b=$("tb"),l=$("tl");if(b){b.style.width=Math.max(0,left/S.T*100)+"%";b.parentNode.classList.toggle("lo",left<=5)}if(l){l.textContent=Math.ceil(Math.max(0,left))+"s";l.classList.toggle("lo",left<=5)}if(left<=5&&Math.abs(left-Math.round(left))<.05&&left>0.2)beep(880,.05);if(left<=0){stopT();guess(true)}},100)}
+function runT(ex){stopT();if(!S.T)return;left=S.T;iv=setInterval(()=>{left-=.1;const b=$("tb"),l=$("tl");if(b){b.style.width=Math.max(0,left/S.T*100)+"%";b.parentNode.classList.toggle("lo",left<=5)}if(l){l.textContent=Math.ceil(Math.max(0,left))+"s";l.classList.toggle("lo",left<=5)}if(left<=5&&Math.abs(left-Math.round(left))<.05&&left>0.2)beep(880,.05);if(left<=0){stopT();ex?ex():guess(true)}},100)}
 function clues(p){
 if(S.mode==="p"){const c=p.cl.split(", "),o=[];for(let k=1;k<=4;k++)o.push("Career so far: "+c.slice(0,k).join(", then "));o.push("Initials: "+p.ini);return o}
 const cl=p.cl.split(", "),C="Clubs: "+p.cl,F=p.fl+": "+p.ft,SPc=p.sp?p.sp[0]+": "+p.sp[1]:null;
@@ -178,7 +178,7 @@ if(m==="o"){olSetup(h);return}
 if(m==="s"){soloSetup(h);return}
 if(m==="w"){wordleSetup(h);return}
 if(m==="g"){gridSetup(h);return}
-if(m!=="d")h+='<h3>Who is playing</h3><div class="r"><input id="nm" placeholder="Add a name" maxlength="14" autocomplete="off"><button class="gh" id="ad" type="button" style="flex:0 0 auto">Add</button></div><div class="chips" id="ch"></div><div class="r">'+opt("rd","Rounds",[[5,"5"],[10,"10"],[15,"15"],[20,"20"],[99,"All"]],cfg.R)+opt("tm","Turn timer",[[0,"Off"],[15,"15 seconds"],[20,"20 seconds"],[30,"30 seconds"]],cfg.T)+poolCtl(cfg.pool)+'</div>'+poolExtra(cfg.pool);
+if(m!=="d")h+='<h3>Who is playing</h3><div class="r"><input id="nm" placeholder="Add a name" maxlength="14" autocomplete="off"><button class="gh" id="ad" type="button" style="flex:0 0 auto">Add</button></div><div class="chips" id="ch"></div><div class="r">'+opt("rd","Rounds",[[5,"5"],[10,"10"],[15,"15"],[20,"20"],[99,"All"]],cfg.R)+opt("tm","Turn timer",[[0,"Off"],[15,"15 seconds"],[20,"20 seconds"],[30,"30 seconds"]],cfg.T)+(m==="c"?opt("gmo","Guessing",[["turns","Take turns"],["sim","Simultaneous"]],cfg.gmo||"turns"):"")+poolCtl(cfg.pool)+'</div>'+poolExtra(cfg.pool);
 h+='<div class="opts">'+(m!=="d"?[["teams","Teams, A vs B"],["pen","Wrong guess costs 1"],["ac","Easy mode, name hints"]]:[]).concat([["snd","Sound effects"],["hap","Vibration"]]).map(a=>'<label><input type="checkbox" id="o_'+a[0]+'"'+(cfg[a[0]]?" checked":"")+'>'+a[1]+'</label>').join("")+'</div><div class="err" aria-live="polite" id="er"></div><div class="step"><i>03</i>Kick off</div><div class="r"><button class="btn" id="go" type="button">'+(m==="d"?"Play today's challenge":"Kick off")+'</button><button class="gh" id="st" type="button" style="flex:0 0 auto">Stats</button></div></div>';
 $("app").innerHTML=h;
 document.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{cfg.mode=b.dataset.m;save();enter=true;setup();post()});
@@ -186,7 +186,7 @@ document.querySelectorAll(".opts input").forEach(i=>i.onchange=()=>{cfg[i.id.sli
 $("st").onclick=()=>{S={ph:"st"};enter=true;draw()};
 let add=()=>{};
 if(m!=="d"){chips();add=()=>{const v=$("nm").value.trim();if(!v)return;if(cfg.names.length>=8){setErr("er","Eight players max");return}if(cfg.names.some(n=>n.toLowerCase()===v.toLowerCase())){setErr("er","That name is taken");return}cfg.names.push(v);$("nm").value="";setErr("er","");chips()};$("ad").onclick=add;$("nm").onkeydown=e=>{if(e.key==="Enter")add()}}
-$("go").onclick=()=>{if(m==="d"){start("d");return}const v=$("nm").value.trim();if(v)add();if(!cfg.names.length){setErr("er","Add at least one player");return}if(cfg.teams&&cfg.names.length<2){setErr("er","Teams need at least two players");return}cfg.R=+$("rd").value;cfg.T=+$("tm").value;cfg.pool=$("pl").value;save();start(m)}}
+$("go").onclick=()=>{if(m==="d"){start("d");return}const v=$("nm").value.trim();if(v)add();if(!cfg.names.length){setErr("er","Add at least one player");return}if(cfg.teams&&cfg.names.length<2){setErr("er","Teams need at least two players");return}cfg.R=+$("rd").value;cfg.T=+$("tm").value;if($("gmo"))cfg.gmo=$("gmo").value;cfg.pool=$("pl").value;save();start(m)}}
 function soloSetup(h){
 const sb=ST.sb||0,sg=ST.sg||0;
 h+='<div class="stat" style="margin-top:0"><div><b>'+sb+'</b><span>Personal best</span></div><div><b>'+sg+'</b><span>Solo runs</span></div></div><div class="r">'+opt("sr","Run length",[[10,"10 rounds"],[20,"20 rounds"],[99,"Endless, 3 strikes"]],cfg.sr||10)+opt("tm","Turn timer",[[0,"Off"],[15,"15 seconds"],[20,"20 seconds"],[30,"30 seconds"]],cfg.T)+poolCtl(cfg.pool)+'</div>'+poolExtra(cfg.pool)+'<div class="opts"><label><input type="checkbox" id="o_snd"'+(cfg.snd?" checked":"")+'>Sound effects</label><label><input type="checkbox" id="o_hap"'+(cfg.hap?" checked":"")+'>Vibration</label></div><div class="step"><i>03</i>Kick off</div><button class="btn" id="go" type="button" style="width:100%">Start solo run</button></div>';
@@ -200,7 +200,7 @@ if(mode==="w"){wordleStart(dk,rand);return}if(mode==="g"){gridStart();return}
 const key=dk||dkey(new Date());let pool,names,R=cfg.R,pen=cfg.pen,ac=cfg.ac,teams=cfg.teams,T=cfg.T;
 if(mode==="d"){if(ST.daily[key]){S={ph:"dd",dk:key};draw();return}seed=hs(key);pool=P;names=["You"];R=5;pen=true;ac=false;teams=false;T=0}
 else{seed=CH?hs(chSeedCode()):null;pool=P.filter(p=>inPool(p,cfg.pool)&&(mode!=="p"||p.cl.split(", ").length>=4));names=mode==="s"?["You"]:cfg.names;if(mode==="s"){R=cfg.sr||10;pen=false;ac=false;teams=false}}
-S={ph:"play",mode,dk:key,pl:names.map(n=>({n,s:0})),deck:shuf(pool).slice(0,Math.min(R,pool.length)),i:0,sh:1,t:0,done:false,msg:"",err:"",last:-1,hl:false,cs:null,res:[],run:0,t0:0,pen,ac,teams,T,solo:mode==="s"?{miss:0,endless:R>=99}:null};enter=true;
+S={ph:"play",mode,dk:key,pl:names.map(n=>({n,s:0})),deck:shuf(pool).slice(0,Math.min(R,pool.length)),i:0,sh:1,t:0,done:false,msg:"",err:"",last:-1,hl:false,cs:null,res:[],run:0,t0:0,pen,ac,teams,T,solo:mode==="s"?{miss:0,endless:R>=99}:null};if(mode==="c"&&cfg.gmo==="sim"){S.sim=true;S.gs=Array(S.pl.length).fill(null);S.pend=0;S.step="gate"}enter=true;
 if(!S.deck.length){/* never let an empty pool start a round; go back and say why */
 S={ph:"setup"};enter=true;draw();setErr("er","No players match "+POOLNAME(cfg.pool)+(mode==="p"?" with a career path of 4+ clubs":"")+". Pick another filter (or Everyone).");return}
 draw()}
@@ -212,7 +212,76 @@ beep(180,.2,"square");buzz(VIB.bad);S.fx="shake";if(S.pen){me.s=Math.max(0,me.s-
 if(S.sh<5){S.sh++;S.t=(S.t+1)%S.pl.length;S.err=(skip?"Skipped. ":"Not quite"+(pn?", minus 1. ":". "))+"Clue "+S.sh+" goes to "+S.pl[S.t].n+"."}
 else{stopT();S.done=true;S.last=-1;S.run=0;S.res.push(0);S.msg="Nobody got that one";S.err="";if(S.solo)S.solo.miss++}
 draw()}
-function next(){S.i++;if(S.i>=S.deck.length||(S.solo&&S.solo.miss>=3)){finish();return}S.sh=1;S.hl=false;S.cs=null;S.t0=0;S.done=false;S.msg="";S.err="";S.t=(S.t+1)%S.pl.length;enter=true;draw()}
+function next(){S.i++;if(S.i>=S.deck.length||(S.solo&&S.solo.miss>=3)){finish();return}S.sh=1;S.hl=false;S.cs=null;S.t0=0;S.done=false;S.msg="";S.err="";if(S.sim){S.gs=Array(S.pl.length).fill(null);S.pend=0;S.step="gate"}else S.t=(S.t+1)%S.pl.length;enter=true;draw()}
+/* ---- Item 1: simultaneous guessing (Classic, pass-the-phone) ----
+   Everyone sees the same clue and seals one guess per clue step. No turn order, no instant
+   feedback, no per-player "skip": the group resolves together. Between players the screen is
+   wiped and re-entered through a pass gate, so an earlier guess, the hint or the answer can
+   never leak to the next player. */
+const simPts=()=>Math.max(1,6-S.sh-(S.hl?1:0));
+function simSeal(rec){ /* seal one player's guess for this step, then pass or resolve */
+  S.gs[S.pend]=rec;S.pend++;stopT();
+  if(S.pend<S.pl.length){S.step="gate";S.err="";S.hl=false;enter=true;draw();return}
+  simResolve()}
+function simStart(){S.step="input";S.err="";enter=true;draw()}
+function simLock(){const p=S.deck[S.i],raw=($("g").value||"").trim();
+  if(!raw){setErr("er","Type a name first");$("g").focus();return}
+  simSeal({t:raw.slice(0,40),ok:hit(norm(raw),p),hl:!!S.hl})}
+function simPass(){simSeal(null)} /* "no guess" is per player and never advances the clue */
+function simTimeout(){simSeal(null)}
+function simResolve(){ /* the single, shared reveal for this clue step */
+  const p=S.deck[S.i],sh=S.sh,solvers=[];
+  S.gs.forEach((g,k)=>{if(!g)return;if(g.ok){const tot=Math.max(1,6-sh-(g.hl?1:0))+tier(p);S.pl[k].s+=tot;g.pts=tot;solvers.push(k)}else g.pts=0});
+  S.done=solvers.length>0||sh>=5;
+  if(solvers.length){ /* one stats bump per solved round, exactly like the turn-based path */
+    S.res.push(sh);S.msg=S.pl.filter((_,k)=>solvers.indexOf(k)>=0).map(x=>x.n).join(", ")+" solved it on clue "+sh;
+    ST.solved++;bumpDist(S.mode,sh);ST.lg=ST.lg||{};ST.lg[p.lg]=(ST.lg[p.lg]||0)+1;
+    const dc=Math.floor(+p.yr/10)*10;ST.era=ST.era||{};ST.era[dc]=(ST.era[dc]||0)+1;sv();achCheck();
+    beep(660,.15);setTimeout(()=>beep(990,.2),120);buzz(VIB.solve);S.fx="glow"}
+  else{S.run=0;S.last=-1;S.msg="Nobody got that one";if(sh>=5)S.res.push(0)}
+  S.step="reveal";enter=true;draw()}
+function simAdvance(){ /* a shared action, only offered after everyone has resolved */
+  if(S.done){next();return}
+  S.sh++;S.gs=Array(S.pl.length).fill(null);S.pend=0;S.step="gate";S.hl=false;stopT();enter=true;draw()}
+function simRender(){
+  const p=S.deck[S.i],N=S.deck.length,cs=S.cs||(S.cs=clues(p)),tr=tier(p);
+  if(!S.t0)S.t0=Date.now();
+  const fresh=S.nk!==S.i+":"+S.sh;S.nk=S.i+":"+S.sh;
+  const solved=S.gs.some(g=>g&&g.ok);
+  let h='<div class="card play sim">'+chBanner()
+   +'<div class="hd bug"><span class="rd">Round <b>'+(S.i+1)+'</b> / '+N+'</span><span class="badge'+(tr===2?" h":"")+'">'+TN[tr]+(tr?" +"+tr:"")+'</span><span class="wp">'+(S.done?"Round over":'Worth <b>'+simPts()+'</b> '+(simPts()===1?"pt":"pts"))+'</span>'+(!S.done&&S.step==="input"&&S.T?'<span id="tl" class="tn"></span>':"")+'</div>'
+   +'<div class="dots">'+S.deck.map((_,k)=>'<i class="'+(k<S.i?"d":k===S.i?"c":"")+'"></i>').join("")+'</div><div class="stack">';
+  const nPrev=(S.step==="reveal"||S.done)?S.sh:S.sh-1;
+  for(let k=0;k<nPrev;k++)h+='<div class="cl tk'+(fresh&&k===nPrev-1?" dr":"")+'" style="--age:'+(nPrev-k)+'"><em>'+(k+1)+'</em><span>'+esc(cs[k])+'</span></div>';
+  h+='<div class="cl slab'+(fresh?" nw":"")+'"><em class="cn">Clue '+S.sh+' of 5</em><span class="ct" data-fit>'+esc(cs[S.sh-1])+'</span></div></div>';
+  if(!S.done&&S.step==="gate"){
+    h+='<div class="simgate"><p class="who">Pass the phone to <b>'+esc(S.pl[S.pend].n)+'</b>. Nobody has seen anyone else\'s guess.</p><button class="btn" id="simg" type="button">'+esc(S.pl[S.pend].n)+' is ready</button></div>'}
+  else if(!S.done&&S.step==="input"){
+    if(S.hl)h+='<div class="cl hint"><em>?</em><span>First name starts with '+p.n[0]+', '+p.n.replace(/ /g,"").length+' letters in all</span></div>';
+    h+='<p class="who">'+esc(S.pl[S.pend].n)+', type your sealed guess. Others cannot see it until the reveal.</p>'
+     +'<input id="g" placeholder="Type a name" aria-label="Your sealed guess" autocomplete="off" autocapitalize="off"'+(S.ac?' list="dl"':"")+'>'
+     +'<div class="err" aria-live="polite" id="er">'+esc(S.err)+'</div>'
+     +'<div class="r"><button class="btn" id="gb" type="button">Lock in guess</button><button class="gh" id="sk" type="button">No guess</button>'+(S.hl?"":'<button class="gh" id="hl" type="button">Letter hint, -1 point</button>')+'</div>'
+     +(S.T?'<div class="bar"><i id="tb"></i></div>':"")}
+  else{
+    h+='<div class="rev'+(solved?"":" miss")+'"><div class="rv-main"><small>'+esc(S.msg)+'</small><h2 data-fit>'+spl(p.n)+'</h2><p>'+esc(p.nat)+', '+esc(p.ft)+'</p></div></div>'
+     +'<p class="who">Everyone\'s guesses for clue '+S.sh+'</p><div class="simrev">'
+     +S.pl.map((x,k)=>{const g=S.gs[k];return '<div class="row"><span>'+esc(x.n)+'</span><b>'+(g?(g.ok?"✓ ":"✗ ")+(g.t?esc(g.t):"no guess"):"— no guess (timed out)")+'</b></div>'}).join("")
+     +'</div>'+pcard(p)
+     +'<button class="btn" id="nx" type="button">'+(S.done?(S.i+1>=N?"See results":"Next player"):"Next clue")+'</button>'}
+  h+='<div class="qrow"><button class="gh qt" type="button">Quit game</button></div>';
+  if(S.teams)h+='<p class="who tmline">Team A <b>'+tm(0)+'</b> and Team B <b>'+tm(1)+'</b></p>';
+  h+='<div class="chips strip">'+S.pl.map((x,k)=>'<span class="chip'+(!S.done&&S.step!=="reveal"&&k===S.pend?' on':'')+'">'+(S.teams?'<i class="tm">'+(k%2?"B":"A")+'</i>':'')+'<span class="nm">'+esc(x.n)+'</span> <b data-to="'+x.s+'" data-from="'+(S.pv&&S.pv[k]!=null?S.pv[k]:x.s)+'">'+x.s+'</b></span>').join("")+'</div></div>'+(S.ac?DL:"");
+  $("app").innerHTML=h;
+  say(S.done?S.msg+". The answer was "+p.n:S.step==="reveal"?"Reveal for clue "+S.sh+". "+S.msg:"Clue "+S.sh+". "+cs[S.sh-1]);
+  if(!S.done&&S.step==="gate"){$("simg").onclick=simStart}
+  else if(!S.done&&S.step==="input"){
+    $("gb").onclick=simLock;$("sk").onclick=simPass;
+    if($("hl"))$("hl").onclick=()=>{const k=left;S.hl=true;draw();left=k};
+    $("g").onkeydown=e=>{setErr("er","");if(e.key==="Enter")simLock()};
+    $("g").focus({preventScroll:true});runT(simTimeout)}
+  else{$("nx").onclick=simAdvance}
+  $("tg").onclick=()=>{const r=document.documentElement,d=r.dataset.theme!=="light";r.dataset.theme=d?"light":"dark";cfg.light=d;save();$("tg").setAttribute("aria-pressed",String(d))}}
 function finish(){
 S.ph="end";ST.g++;seed=null;rgClear();if(S.mode==="s"){const sc=S.pl[0].s;ST.sg=(ST.sg||0)+1;if(sc>(ST.sb||0)){ST.sb=sc;S.nb=1}}
 if(S.mode==="d"){const k=S.dk||dkey(new Date());ST.daily[k]={s:S.pl[0].s,g:grid(S.res)};ST.ls=Math.max(ST.ls||0,streak())}
@@ -246,6 +315,7 @@ const lab=S.mode==="p"?"Career path":S.mode==="s"?"Solo":"Classic";
 const solved=S.res.filter(x=>x>0).length,top=Math.max(...S.pl.map(x=>x.s));
 const stxt="YouKnowBall ⚽ "+(S.teams?lab+" — Team A "+a+" – "+b+" Team B":lab+" — solved "+solved+"/"+S.res.length+" · top "+top+" pts")+"\n"+grid(S.res)+"\n"+rematchLink(S.mode);
 $("cp").onclick=()=>share(stxt,$("cp"));$("chf").onclick=()=>challenge($("chf"));return}
+if(S.sim){simRender();return}
 const p=S.deck[S.i],N=S.deck.length,cs=S.cs||(S.cs=clues(p)),tr=tier(p);
 if(!S.t0)S.t0=Date.now();
 const fresh=S.nk!==S.i+":"+S.sh;S.nk=S.i+":"+S.sh;
@@ -443,7 +513,7 @@ function aboutData(){if(!DATA_DATE)return"";
    existing stats object (ST.rg inside ykbs). Versioned, and anything incompatible is dropped
    without a crash. Online is deliberately not resumable: the host owns the room's state. */
 function rgSave(){try{
- if(!S||S.ph!=="play"||RGM.indexOf(S.mode)<0||!S.deck||!S.deck.length||!S.pl||!S.pl.length)return;
+ if(!S||S.ph!=="play"||S.sim||RGM.indexOf(S.mode)<0||!S.deck||!S.deck.length||!S.pl||!S.pl.length)return;
  ST.rg={v:RGV,m:S.mode,dk:S.dk||null,deck:S.deck.map(p=>p.n),i:S.i,sh:S.sh,t:S.t,
   names:S.pl.map(x=>x.n),pl:S.pl.map(x=>x.s),cs:S.cs||null,res:S.res.slice(),run:S.run,last:S.last,hl:!!S.hl,
   pen:!!S.pen,ac:!!S.ac,teams:!!S.teams,T:S.T||0,solo:S.solo?{miss:S.solo.miss,endless:!!S.solo.endless}:null,
