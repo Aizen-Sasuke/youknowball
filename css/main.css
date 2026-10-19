@@ -224,6 +224,12 @@ input:disabled{opacity:.55}
 .chip .tm,#obd .tm{font-style:normal;margin-right:8px;padding:0 6px;font:700 .8em var(--fd);background:var(--ink);color:var(--it)}
 #obd .tm{font-size:12px}
 
+/* join QR in the lobby (client-side; hidden when the encoder is unavailable) */
+.oqr{margin:0 0 18px}
+.oqr[hidden]{display:none}
+.oqr svg{display:block;width:100%;max-width:220px;height:auto;background:#fff}
+:root[data-theme="light"] .oqr svg{outline:1px solid var(--line)}
+
 /* reveal slab */
 .rev{position:relative;display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px 22px;margin:10px 0 24px;padding:clamp(22px,3.6vw,42px) clamp(26px,4.6vw,64px) clamp(22px,3.6vw,42px) clamp(20px,3.6vw,44px);overflow:hidden;container-type:inline-size;background:var(--slab);color:var(--slab-ink);clip-path:polygon(0 0,100% 0,calc(100% - 22px) 100%,0 100%);animation:clin .28s var(--ease) both}
 .rv-main{flex:1 1 240px;min-width:0}
