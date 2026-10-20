@@ -264,10 +264,10 @@ function simRender(){
      +'<div class="r"><button class="btn" id="gb" type="button">Lock in guess</button><button class="gh" id="sk" type="button">No guess</button>'+(S.hl?"":'<button class="gh" id="hl" type="button">Letter hint, -1 point</button>')+'</div>'
      +(S.T?'<div class="bar"><i id="tb"></i></div>':"")}
   else{
-    h+='<div class="rev'+(solved?"":" miss")+'"><div class="rv-main"><small>'+esc(S.msg)+'</small><h2 data-fit>'+spl(p.n)+'</h2><p>'+esc(p.nat)+', '+esc(p.ft)+'</p></div></div>'
+    h+='<div class="rev'+(solved?"":" miss")+'"><div class="rv-main"><small>'+esc(S.msg)+(S.done?"":". Next clue.")+'</small>'+(S.done?'<h2 data-fit>'+spl(p.n)+'</h2><p>'+esc(p.nat)+', '+esc(p.ft)+'</p>':"")+'</div></div>'
      +'<p class="who">Everyone\'s guesses for clue '+S.sh+'</p><div class="simrev">'
      +S.pl.map((x,k)=>{const g=S.gs[k];return '<div class="row"><span>'+esc(x.n)+'</span><b>'+(g?(g.ok?"✓ ":"✗ ")+(g.t?esc(g.t):"no guess"):"— no guess (timed out)")+'</b></div>'}).join("")
-     +'</div>'+pcard(p)
+     +'</div>'+(S.done?pcard(p):"")
      +'<button class="btn" id="nx" type="button">'+(S.done?(S.i+1>=N?"See results":"Next player"):"Next clue")+'</button>'}
   h+='<div class="qrow"><button class="gh qt" type="button">Quit game</button></div>';
   if(S.teams)h+='<p class="who tmline">Team A <b>'+tm(0)+'</b> and Team B <b>'+tm(1)+'</b></p>';
@@ -422,7 +422,7 @@ if(host){keepAwake();HS={ph:"lobby",r:0,N:cfg.R,sh:0,clues:[],tl:0,res:null,sc:{
 OL.un.push(R.onPeers(ch=>{if(!OL)return;OL.ps=ch.peers;
  if(!OL.host&&ch.peers.some(p=>p.presence&&p.presence.bye)){olHostEnd("The host left the room.");return}
  if(OL.host)hostSync();else{const h=ch.peers.filter(p=>p.kind==="viewer"&&!p.isMe&&p.presence.h).sort((a,b)=>a.presence.h.at-b.presence.h.at)[0];OL.H=h?h.presence.h:null}olRender()},e=>olFail("Connection lost ("+e.code+").")))}
-const snap=()=>{const act=Object.keys(HS.sc).filter(id=>HS.sc[id].active);return {ph:HS.ph,r:HS.r,N:HS.N,sh:HS.sh,cl:HS.clues.slice(0,HS.sh),tl:HS.tl,T:HS.T,w:Math.max(1,6-HS.sh),res:HS.res,sc:Object.entries(HS.sc).map(([id,x])=>[x.nm,x.s,id,x.tm]),fb:HS.fb,at:HS.at,gmode:HS.gmode,set:HS.set,nsub:act.filter(id=>HS.subs[id]).length,nact:act.length}};
+const snap=()=>{const act=Object.keys(HS.sc).filter(id=>HS.sc[id].active);/* an unsolved clue keeps the answer private (it is not the round's end yet) */const res=HS.res?((HS.gmode==="sim"&&!HS.res.solved&&HS.res.sh<5)?Object.assign({},HS.res,{n:"",nat:"",ft:""}):HS.res):null;return {ph:HS.ph,r:HS.r,N:HS.N,sh:HS.sh,cl:HS.clues.slice(0,HS.sh),tl:HS.tl,T:HS.T,w:Math.max(1,6-HS.sh),res,sc:Object.entries(HS.sc).map(([id,x])=>[x.nm,x.s,id,x.tm]),fb:HS.fb,at:HS.at,gmode:HS.gmode,set:HS.set,nsub:act.filter(id=>HS.subs[id]).length,nact:act.length}};
 function hostPub(){const j=JSON.stringify(snap());if(j===OL.last)return;OL.last=j;R.presence({h:JSON.parse(j)}).catch(()=>{})}
 function hostSync(){
 Object.keys(HS.sc).forEach(id=>{HS.sc[id].active=false});
@@ -511,11 +511,11 @@ if($("osub"))$("osub").textContent=s.nsub+"/"+s.nact+" locked in";
 const bar=$("otb");bar.style.width=Math.max(0,s.tl/(s.res?5:s.T)*100)+"%";bar.parentNode.classList.toggle("lo",!s.res&&s.tl<=5);$("ot").classList.toggle("lo",!s.res&&s.tl<=5);
 if(OL.nc!==s.cl.length){OL.nc=s.cl.length;say("Clue "+s.cl.length+". "+s.cl[s.cl.length-1]);$("ocl").innerHTML=oclHtml(s.cl,!!s.res);fit()}
 if(s.res&&!OL.rv){OL.rv=1;const rp=P.find(x=>x.n===s.res.n);
- if(sim){const ok=s.res.all.filter(x=>x.ok);
-  say((ok.length?ok.map(x=>x.nm).join(", ")+" scored":"Nobody got it")+". The answer was "+s.res.n);
+ if(sim){const ok=s.res.all.filter(x=>x.ok),show=s.res.solved||s.res.sh>=5;
+  say(ok.length?ok.map(x=>x.nm).join(", ")+" scored. The answer was "+s.res.n:"Nobody got it. Next clue.");
   $("ocl").innerHTML=oclHtml(s.cl,true);
-  $("orv").innerHTML='<div class="rev'+(s.res.solved?"":" miss")+'"><div class="rv-main"><small>'+(ok.length?esc(ok.map(x=>x.nm).join(", "))+" solved clue "+s.res.sh:"Nobody got that one")+'</small><h2 data-fit>'+spl(s.res.n)+'</h2><p>'+esc(s.res.nat)+', '+esc(s.res.ft)+'</p></div></div>'
-   +'<p class="who">Everyone\'s guesses for clue '+s.res.sh+'</p><div class="simrev">'+s.res.all.map(x=>'<div class="row"><span>'+(x.tm!=null?'<i class="tm">'+(x.tm?"B":"A")+'</i>':'')+esc(x.nm)+(x.id===me()?" (you)":"")+'</span><b>'+(x.ok?"\u2713 ":"\u2717 ")+(x.t?esc(x.t):"no guess")+'</b></div>').join("")+'</div>'+(rp?pcard(rp):"")}
+  $("orv").innerHTML='<div class="rev'+(s.res.solved?"":" miss")+'"><div class="rv-main"><small>'+(ok.length?esc(ok.map(x=>x.nm).join(", "))+" solved clue "+s.res.sh:"Nobody got that one"+(s.res.sh<5?". Next clue.":""))+'</small>'+(show?'<h2 data-fit>'+spl(s.res.n)+'</h2><p>'+esc(s.res.nat)+', '+esc(s.res.ft)+'</p>':"")+'</div></div>'
+   +'<p class="who">Everyone\'s guesses for clue '+s.res.sh+'</p><div class="simrev">'+s.res.all.map(x=>'<div class="row"><span>'+(x.tm!=null?'<i class="tm">'+(x.tm?"B":"A")+'</i>':'')+esc(x.nm)+(x.id===me()?" (you)":"")+'</span><b>'+(x.ok?"\u2713 ":"\u2717 ")+(x.t?esc(x.t):"no guess")+'</b></div>').join("")+'</div>'+(show&&rp?pcard(rp):"")}
  else{$("orv").innerHTML='<div class="rev'+(s.res.by?"":" miss")+'"><div class="rv-main"><small>'+(s.res.by?esc(s.res.by)+" scored "+s.res.pts:"Nobody got that one")+'</small><h2 data-fit>'+spl(s.res.n)+'</h2><p>'+esc(s.res.nat)+', '+esc(s.res.ft)+'</p></div><div class="pts">'+(s.res.by?'<span>+</span><b>'+s.res.pts+'</b>':'<b>0</b>')+'<em>pts</em></div></div>'+(rp?pcard(rp):"")}
  fit();$("og").disabled=true;$("ogb").disabled=true}
 if(sim&&!s.res&&OL.hold&&$("ofb")){$("ofb").textContent='Locked in "'+OL.hold+'". Waiting for the others...';$("og").disabled=true;$("ogb").disabled=true}
