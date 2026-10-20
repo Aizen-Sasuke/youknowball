@@ -355,7 +355,10 @@ if(!window.Peer){rej({code:"unavailable"});return}
 let pr,mem={},myid="",hs=[],tmr=null,conns=[],hc=null,done=false,locked=false;
 const view=()=>Object.keys(mem).map(id=>({peer:id,by:null,isMe:id===myid,sameTab:id===myid,kind:"viewer",guest:false,presence:mem[id],updatedAt:Date.now()}));
 const fire=()=>{clearTimeout(tmr);tmr=setTimeout(()=>{const v=view();hs.forEach(f=>f({peers:v,joined:[],left:[],updated:[]}))},20)};
-const bcast=()=>{conns.forEach(c=>{try{c.send({t:"s",m:mem})}catch(e){}});fire()};
+const bcast=()=>{/* never re-broadcast a player's sealed guess (presence.g): the host keeps it in mem
+  to resolve the step, but other clients must not receive it before the reveal. */
+ const out={};Object.keys(mem).forEach(id=>{const p=Object.assign({},mem[id]);delete p.g;out[id]=p});
+ conns.forEach(c=>{try{c.send({t:"s",m:out})}catch(e){}});fire()};
 const api={name,emit:async()=>{},on:()=>()=>{},peers:view,lock:v=>{locked=!!v},
 presence:async q=>{const c=JSON.parse(JSON.stringify(q));mem[myid]=Object.assign(mem[myid]||{},c);if(host)bcast();else{fire();try{hc.send({t:"p",p:c})}catch(e){}}},
 onPeers:f=>{hs.push(f);setTimeout(()=>f({peers:view(),joined:[],left:[],updated:[]}),0);return()=>{hs=hs.filter(x=>x!==f)}},
@@ -363,12 +366,13 @@ connected:()=>true,onConnection:()=>()=>{},leave:async()=>{try{pr.destroy()}catc
 const ice=window.GTP_ICE?{config:{iceServers:window.GTP_ICE}}:{};
 if(host){pr=new Peer(NS+name,ice);
 pr.on("open",id=>{myid=id;mem[id]={};done=true;res(api)});
+setTimeout(()=>{if(!done)rej({code:"upstream_error"})},20000);
 pr.on("error",e=>{if(!done)rej({code:e.type==="unavailable-id"?"limit_reached":"upstream_error"})});
 pr.on("open",()=>olStatus(""));
 pr.on("disconnected",()=>{olStatus("Lost signal, reconnecting...");try{pr.reconnect()}catch(e){}});
-pr.on("connection",c=>{/* a started room still accepts connections so a dropped player can rejoin and resume; only the 8-player cap rejects. */if(Object.keys(mem).length>=8){c.on("open",()=>{try{c.send({t:"x",m:"This room is full (8 players max)."})}catch(e){}setTimeout(()=>{try{c.close()}catch(e){}},400)});return}conns.push(c);c.on("open",()=>{mem[c.peer]={};bcast()});c.on("data",d=>{if(d&&d.t==="p"){mem[c.peer]=Object.assign(mem[c.peer]||{},d.p);bcast()}});const gone=()=>{conns=conns.filter(x=>x!==c);delete mem[c.peer];bcast()};c.on("close",gone);c.on("error",gone)})}
+pr.on("connection",c=>{/* a started room still accepts connections so a dropped player can rejoin and resume; only the 8-player cap rejects. */if(Object.keys(mem).length>=8){c.on("open",()=>{try{c.send({t:"x",m:"This room is full (8 players max)."})}catch(e){}setTimeout(()=>{try{c.close()}catch(e){}},400)});return}conns.push(c);c.on("open",()=>{mem[c.peer]=mem[c.peer]||{};bcast()});c.on("data",d=>{if(d&&d.t==="p"){mem[c.peer]=Object.assign(mem[c.peer]||{},d.p);bcast()}});const gone=()=>{conns=conns.filter(x=>x!==c);delete mem[c.peer];bcast()};c.on("close",gone);c.on("error",gone)})}
 else{pr=new Peer(undefined,ice);
-pr.on("open",id=>{myid=id;mem[id]={};hc=pr.connect(NS+name,{reliable:true});hc.on("open",()=>{done=true;res(api)});hc.on("data",d=>{if(d&&d.t==="s"){mem=d.m;fire()}if(d&&d.t==="x"){if(OL)OL.gone=1;olFail(d.m)}});hc.on("close",()=>{mem={};fire();olRetry()});setTimeout(()=>{if(!done)rej({code:"not_found"})},9000)});
+pr.on("open",id=>{myid=id;mem[id]={};hc=pr.connect(NS+name,{reliable:true});hc.on("open",()=>{done=true;res(api)});hc.on("data",d=>{if(d&&d.t==="s"){mem=d.m;fire()}if(d&&d.t==="x"){if(OL)OL.gone=1;olFail(d.m)}});hc.on("close",()=>{mem={};fire();olRetry()});setTimeout(()=>{if(!done)rej({code:"not_found"})},15000)});
 pr.on("error",e=>{if(!done)rej({code:e.type==="peer-unavailable"?"not_found":"upstream_error"})})}
 })}}
 (async()=>{try{RM=window.claude?await window.claude.use("room"):null;RSRC=RM?"claude":""}catch(e){RM=null}if(!RM&&window.Peer){RM=peerRoom();RSRC="peer"}if(S.ph==="setup"){setup();setTimeout(invGo,0)}})();
@@ -422,15 +426,19 @@ const snap=()=>{const act=Object.keys(HS.sc).filter(id=>HS.sc[id].active);return
 function hostPub(){const j=JSON.stringify(snap());if(j===OL.last)return;OL.last=j;R.presence({h:JSON.parse(j)}).catch(()=>{})}
 function hostSync(){
 Object.keys(HS.sc).forEach(id=>{HS.sc[id].active=false});
+HS.syncing=true; /* collect presence first: hostSub must not resolve mid-loop while
+  players later in the list are still marked inactive (that ended 3+ player steps early). */
+try{
 OL.ps.filter(p=>p.kind==="viewer"&&p.presence.nm).forEach(p=>{
  const id=pKey(p);const nm=String(p.presence.nm).slice(0,14);
  if(!HS.sc[id])HS.sc[id]={nm,s:0,tm:null};
  HS.sc[id].nm=nm;HS.sc[id].active=true;
  const g=p.presence.g;
  if(!p.isMe&&g&&g.r===HS.r){
-   if(HS.gmode==="sim")hostSub(id,g.t,g.k);
+   if(HS.gmode==="sim"){if(g.sh===HS.sh)hostSub(id,g.t,g.k)}
    else if(g.k>(HS.k[id]||0)){HS.k[id]=g.k;hostGuess(id,g.t)}
  }});
+}finally{HS.syncing=false}
 hostPub();if(HS.gmode==="sim")maybeResolve()}
 function hostGuess(id,text){
 if(HS.ph!=="play"||HS.res||!HS.sc[id])return;const v=norm(String(text).slice(0,40));if(!v)return;const a=HS.ans;
@@ -446,7 +454,7 @@ function hostSub(id,text,k){
  HS.subs[id]={t:String(text||"").slice(0,40),k:+k||0};
  maybeResolve();hostPub();olRender()}
 function maybeResolve(){
- if(!HS||HS.ph!=="play"||HS.gmode!=="sim"||HS.res)return;
+ if(!HS||HS.ph!=="play"||HS.gmode!=="sim"||HS.res||HS.syncing)return;
  const ids=Object.keys(HS.sc).filter(id=>HS.sc[id].active);
  if(ids.length&&ids.every(id=>HS.subs[id]))hostResolve()}
 function hostResolve(){
@@ -489,11 +497,11 @@ if(!OL)return;const v=$("og").value.trim();if(!v)return;const s=OL.host?snap():O
 if(s.gmode==="sim"&&OL.hold)return; /* one sealed guess per clue step, until the reveal */
 OL.k=Date.now();
 if(s.gmode==="sim"){OL.hold=v.slice(0,40);$("og").value="";$("ofb").textContent="Locked in. Waiting for the others...";
- if(OL.host)hostSub(me(),v,OL.k);else R.presence({g:{r:s.r,t:v.slice(0,40),k:OL.k}}).catch(()=>{});
+ if(OL.host)hostSub(me(),v,OL.k);else R.presence({g:{r:s.r,sh:s.sh,t:v.slice(0,40),k:OL.k}}).catch(()=>{});
  if($("og")){$("og").disabled=true;$("ogb").disabled=true}
  return}
 $("og").value="";$("ofb").textContent="Checking";
-if(OL.host){HS.k[me()]=OL.k;hostGuess(me(),v)}else R.presence({g:{r:s.r,t:v.slice(0,40),k:OL.k}}).catch(()=>{})}
+if(OL.host){HS.k[me()]=OL.k;hostGuess(me(),v)}else R.presence({g:{r:s.r,sh:s.sh,t:v.slice(0,40),k:OL.k}}).catch(()=>{})}
 function olUpd(s){
 if(s.ph==="lobby"){$("opl").innerHTML=s.sc.map(r=>'<span class="chip">'+(r[3]!=null?'<i class="tm">'+(r[3]?"B":"A")+'</i>':'')+esc(r[0])+(r[2]===me()?" (you)":"")+'</span>').join("");return}
 if(s.ph!=="play")return;
